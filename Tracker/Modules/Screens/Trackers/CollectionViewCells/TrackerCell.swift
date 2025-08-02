@@ -92,13 +92,16 @@ final class TrackerCell: UICollectionViewCell {
         plusButton.tintColor = tracker.color
         emojiLabel.text = tracker.emoji
         taskLabel.text = tracker.title
-        daysLabel.text = "\(days) " + daySuffix(for: days)
+        daysLabel.text = "\(days) " + days.daySuffix()
+    }
+    
+    func setCompleted(isCompleted: Bool) {
+        plusButton.isSelected = isCompleted
     }
 }
 
 private extension TrackerCell {
     @objc func trackAction() {
-        plusButton.isSelected.toggle()
         completeTracker?()
     }
     
@@ -138,24 +141,6 @@ private extension TrackerCell {
         
         plusButton.snp.makeConstraints { make in
             make.size.equalTo(34.dvs)
-        }
-    }
-    
-    func daySuffix(for count: Int) -> String {
-        let remainder10 = count % 10
-        let remainder100 = count % 100
-        
-        if remainder100 >= 11 && remainder100 <= 14 {
-            return "дней"
-        }
-        
-        switch remainder10 {
-        case 1:
-            return "день"
-        case 2...4:
-            return "дня"
-        default:
-            return "дней"
         }
     }
 }

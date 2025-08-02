@@ -10,13 +10,15 @@ import UIKit
 final class NewTrackerCoordinator: Coordinator {
     private let newTrackerService = NewTrackerService()
     private let scheduleService = ScheduleService()
+    private let trackersDataProvider: TrackersDataProvider
     private var newTrackerViewModel: NewTrackerViewModel?
     
     var onFinishCreatingTracker: ((Tracker, String) -> Void)?
     var navigationController: UINavigationController
     
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, trackersDataProvider: TrackersDataProvider) {
         self.navigationController = navigationController
+        self.trackersDataProvider = trackersDataProvider
     }
     
     func start() {
@@ -42,7 +44,9 @@ final class NewTrackerCoordinator: Coordinator {
 
 private extension NewTrackerCoordinator {
     func createNewTrackersController() -> UIViewController {
-        let viewModel = NewTrackerViewModel(newTrackerService: newTrackerService, coordinator: self)
+        let viewModel = NewTrackerViewModel(newTrackerService: newTrackerService,
+                                            coordinator: self,
+                                            trackersDataProvider: trackersDataProvider)
         newTrackerViewModel = viewModel
         let viewController = NewTrackerViewController(viewModel: viewModel)
         return viewController

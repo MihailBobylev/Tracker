@@ -8,22 +8,22 @@
 import UIKit
 
 protocol NewTrackerViewModelDelegate: AnyObject {
-    func updateScheduleInfo(with text: String?)
+    func changeButtonState(to isEnabled: Bool)
 }
 
 protocol NewTrackerViewModelProtocol {
     var delegate: NewTrackerViewModelDelegate? { get set }
-    var onButtonStateChange: ((Bool) -> Void)? { get set }
     func getSections() -> [NewTrackerSectionType]
-    func didSelectItem(at type: NewTrackerSectionType.Details)
+    func configureTrackerCollectonViewManager(with collectionView: UICollectionView)
     func updateSelectedWeekdays(_ days: Set<WeekdayType>)
-    func updateEnteredText(newText: String)
     func doneButtonTapped()
 }
 
 final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     private let coordinator: NewTrackerCoordinator
     private var newTrackerService: NewTrackerService
+    private let trackersDataProvider: TrackersDataProvider
+    private var mainCollectionViewManager: MainCollectionViewManagerProtocol?
     private var trackerTitle: String = "" {
         didSet {
             updateButtonState()
@@ -31,41 +31,35 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     }
     private var selectedWeekdays: Set<WeekdayType> = [] {
         didSet {
-            delegate?.updateScheduleInfo(with: selectedWeekdays.labelText)
+            updateScheduleInfo(with: selectedWeekdays.labelText)
             updateButtonState()
         }
     }
     
     weak var delegate: NewTrackerViewModelDelegate?
     
-    var onButtonStateChange: ((Bool) -> Void)?
-    
-    init(newTrackerService: NewTrackerService, coordinator: NewTrackerCoordinator) {
+    init(newTrackerService: NewTrackerService, coordinator: NewTrackerCoordinator, trackersDataProvider: TrackersDataProvider) {
         self.newTrackerService = newTrackerService
         self.coordinator = coordinator
+        self.trackersDataProvider = trackersDataProvider
+    }
+    
+    func configureTrackerCollectonViewManager(with collectionView: UICollectionView) {
+        mainCollectionViewManager = MainCollectionViewManager(trackersDataProvider: trackersDataProvider,
+                                                              collectionView: collectionView,
+                                                              sections: newTrackerService.fetchNewTrackerSections())
+        mainCollectionViewManager?.setupCollectionView()
+        mainCollectionViewManager?.delegate = self
     }
     
     func getSections() -> [NewTrackerSectionType] {
         newTrackerService.fetchNewTrackerSections()
     }
     
-    func didSelectItem(at type: NewTrackerSectionType.Details) {
-        switch type {
-        case .category:
-            coordinator.goToCategory()
-        case .schedule:
-            coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
-        }
-    }
-    
     func updateSelectedWeekdays(_ days: Set<WeekdayType>) {
         selectedWeekdays = days
     }
-    
-    func updateEnteredText(newText: String) {
-        trackerTitle = newText
-    }
-    
+
     func doneButtonTapped() {
         let createdTracker = Tracker(title: trackerTitle,
                                      color: .green,
@@ -75,9 +69,28 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     }
 }
 
+extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
+    func didSelectItem(at type: NewTrackerSectionType.Details) {
+        switch type {
+        case .category:
+            coordinator.goToCategory()
+        case .schedule:
+            coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
+        }
+    }
+    
+    func updateEnteredText(newText: String) {
+        trackerTitle = newText
+    }
+}
+
 private extension NewTrackerViewModel {
+    func updateScheduleInfo(with text: String?) {
+        mainCollectionViewManager?.updateSelectedWeekday(with: text)
+    }
+    
     func updateButtonState() {
         let isEnabled = !trackerTitle.isEmpty && !selectedWeekdays.isEmpty
-        onButtonStateChange?(isEnabled)
+        delegate?.changeButtonState(to: isEnabled)
     }
 }

@@ -12,7 +12,7 @@ final class ScheduleViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Расписание"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 16.dfs, weight: .medium)
         label.textAlignment = .center
         return label
     }()
@@ -21,7 +21,10 @@ final class ScheduleViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         collectionView.backgroundColor = .clear
         collectionView.register(DetailsCell.self, forCellWithReuseIdentifier: DetailsCell.reuseID)
-        collectionView.contentInset.top = 16
+        collectionView.contentInset.top = 16.dvs
+        collectionView.contentInset.bottom = 16.dvs
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
         return collectionView
     }()
     
@@ -67,20 +70,20 @@ private extension ScheduleViewController {
         view.addSubview(doneButton)
         
         titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(27)
+            make.top.equalToSuperview().offset(27.dvs)
             make.leading.trailing.equalToSuperview()
         }
         
         scheduleCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(14)
+            make.top.equalTo(titleLabel.snp.bottom).offset(14.dvs)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(doneButton.snp.top).inset(-16)
+            make.bottom.equalTo(doneButton.snp.top).inset(-16.dvs)
         }
         
         doneButton.snp.makeConstraints { make in
-            make.height.equalTo(60)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalTo(60.dvs)
+            make.leading.trailing.equalToSuperview().inset(20.dhs)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(16.dvs)
         }
     }
     
@@ -91,7 +94,7 @@ private extension ScheduleViewController {
         scheduleCollectionViewManager.didToggleDaySelection = { [weak self] weekdayType in
             self?.viewModel.didSelectItem(weekdayType: weekdayType)
         }
-        //scheduleCollectionViewManager.delegate = self
+        
         let layout = scheduleCollectionViewManager.createLayout()
         scheduleCollectionView.setCollectionViewLayout(layout, animated: false)
         scheduleCollectionView.delegate = scheduleCollectionViewManager

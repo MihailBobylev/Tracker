@@ -12,15 +12,24 @@ final class TrackersViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Трекеры"
-        label.font = UIFont.systemFont(ofSize: 34, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 34.dfs, weight: .bold)
         label.textAlignment = .left
         return label
+    }()
+    
+    private lazy var datePicker: UIDatePicker = {
+        let datePicker = UIDatePicker()
+        datePicker.preferredDatePickerStyle = .compact
+        datePicker.datePickerMode = .date
+        datePicker.locale = Locale(identifier: "ru_RU")
+        datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
+        return datePicker
     }()
     
     private lazy var searchTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Поиск"
-        tf.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         tf.backgroundColor = UIColor(resource: .grayPaleSky)
         tf.layer.cornerRadius = 10
         tf.clearButtonMode = .whileEditing
@@ -37,7 +46,10 @@ final class TrackersViewController: UIViewController {
                                 withReuseIdentifier: TrackerHeaderCell.reuseID)
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.reuseID)
         collectionView.backgroundColor = .clear
-        collectionView.contentInset.top = 24
+        collectionView.contentInset.top = 24.dvs
+        collectionView.contentInset.bottom = 24.dvs
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .onDrag
         return collectionView
     }()
@@ -45,7 +57,7 @@ final class TrackersViewController: UIViewController {
     private let emptyStateVStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
-        stack.spacing = 8
+        stack.spacing = 8.dvs
         stack.alignment = .center
         return stack
     }()
@@ -60,14 +72,11 @@ final class TrackersViewController: UIViewController {
         let label = UILabel()
         label.text = "Что будем отслеживать?"
         label.numberOfLines = 1
-        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 12.dfs, weight: .medium)
         return label
     }()
     
-    var addNewTracker: (() -> Void)?
-    
     private var viewModel: TrackersViewModelProtocol
-    private var trackerCollectonViewManager: TrackerCollectonViewManagerProtocol?
     
     init(viewModel: TrackersViewModelProtocol) {
         self.viewModel = viewModel
@@ -83,18 +92,16 @@ final class TrackersViewController: UIViewController {
         super.viewDidLoad()
         configureNavBar()
         setupUI()
-        setupAppearance()
+        viewModel.configureTrackerCollectonViewManager(with: mainCollectionView)
+        viewModel.selectedDate = datePicker.date
         view.addKeyboardDismissTap()
     }
 }
 
 extension TrackersViewController: TrackersViewModelDelegate {
-    func fillManagerWithData(trackersDataProvider: TrackersDataProvider) {
-        trackerCollectonViewManager?.configure(trackersDataProvider: trackersDataProvider)
-    }
-    
-    func updateCollectionView() {
-        trackerCollectonViewManager?.updateCollectionView()
+    func updateEmptyState(to isShow: Bool) {
+        emptyStateVStack.isHidden = !isShow
+        mainCollectionView.isHidden = isShow
     }
 }
 
@@ -106,14 +113,11 @@ private extension TrackersViewController {
                                          action: #selector(leftButtonTapped))
         
         navigationItem.leftBarButtonItem = leftButton
-        
-        let datePicker = UIDatePicker()
-        datePicker.preferredDatePickerStyle = .compact
-        datePicker.datePickerMode = .date
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
     }
     
     func setupUI() {
+        view.backgroundColor = .white
         view.addSubview(titleLabel)
         view.addSubview(mainCollectionView)
         view.addSubview(searchTextField)
@@ -123,19 +127,19 @@ private extension TrackersViewController {
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide)
-            make.leading.trailing.equalToSuperview().inset(16)
+            make.leading.trailing.equalToSuperview().inset(16.dhs)
         }
         
         searchTextField.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(7)
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.height.equalTo(36)
+            make.top.equalTo(titleLabel.snp.bottom).offset(7.dvs)
+            make.leading.trailing.equalToSuperview().inset(16.dhs)
+            make.height.equalTo(36.dhs)
         }
         
         mainCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchTextField.snp.bottom).offset(10)
+            make.top.equalTo(searchTextField.snp.bottom).offset(10.dhs)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(-10)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(-10.dvs)
         }
         
         emptyStateImageView.snp.makeConstraints { make in
@@ -144,7 +148,7 @@ private extension TrackersViewController {
         
         emptyStateVStack.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(220)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(220.dvs)
         }
     }
     
@@ -157,38 +161,25 @@ private extension TrackersViewController {
 
         imageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(16.dhs)
         }
 
         container.snp.makeConstraints { make in
-            make.width.equalTo(30)
-            make.height.equalTo(36)
+            make.width.equalTo(30.dhs)
+            make.height.equalTo(36.dvs)
         }
         
         return container
     }
-    
-    func setupAppearance() {
-        trackerCollectonViewManager = TrackerCollectonViewManager(trackersDataProvider: viewModel.trackersDataProvider,
-                                                                  collectionView: mainCollectionView)
-        guard let trackerCollectonViewManager else { return }
-        //scheduleCollectionViewManager.delegate = self
-        let layout = trackerCollectonViewManager.createLayout()
-        mainCollectionView.setCollectionViewLayout(layout, animated: false)
-        mainCollectionView.delegate = trackerCollectonViewManager
-        mainCollectionView.dataSource = trackerCollectonViewManager
-    }
-    
-//    func updateEmptyStateVisibility() {
-//        let isEmpty = dataSource.isEmpty
-//        emptyStateVStack.isHidden = !isEmpty
-//        mainCollectionView.isHidden = isEmpty
-//    }
 }
 
 // MARK: Actions
 private extension TrackersViewController {
-    @objc private func leftButtonTapped() {
-        addNewTracker?()
+    @objc func dateChanged() {
+        viewModel.selectedDate = datePicker.date
+    }
+    
+    @objc func leftButtonTapped() {
+        viewModel.goToAddNewTrackerScreen()
     }
 }

@@ -8,7 +8,6 @@
 import UIKit
 
 protocol ScheduleCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource {
-    //var delegate: MainCollectionViewManagerDelegate? { get set }
     var didToggleDaySelection: ((WeekdayType) -> Void)? { get set }
     func createLayout() -> UICollectionViewCompositionalLayout
     func configure(selectedWeekdays: Set<WeekdayType>)
@@ -18,7 +17,6 @@ final class ScheduleCollectionViewManager: NSObject, ScheduleCollectionViewManag
     private let sections: [WeekdayType]
     private var selectedWeekdays: Set<WeekdayType> = []
     
-    //weak var delegate: MainCollectionViewManagerDelegate?
     var didToggleDaySelection: ((WeekdayType) -> Void)?
     
     init(sections: [WeekdayType]) {
@@ -34,7 +32,6 @@ final class ScheduleCollectionViewManager: NSObject, ScheduleCollectionViewManag
             return section
         }
         let config = UICollectionViewCompositionalLayoutConfiguration()
-        //config.interSectionSpacing = 24
         layout.configuration = config
         layout.register(DetailsBackgroundDecorationView.self, forDecorationViewOfKind: DetailsBackgroundDecorationView.identifier)
         
@@ -80,23 +77,23 @@ private extension ScheduleCollectionViewManager {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(75)
+                heightDimension: .absolute(75.dvs)
             )
         )
         
         let group = NSCollectionLayoutGroup.vertical(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(75)
+                heightDimension: .absolute(75.dvs)
             ),
-            subitems: [item, item, item, item, item, item, item]
+            subitems: [item]
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
         
         let backgroundItem = NSCollectionLayoutDecorationItem.background(elementKind: DetailsBackgroundDecorationView.identifier)
-        backgroundItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        backgroundItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
         section.decorationItems = [backgroundItem]
         
         return section

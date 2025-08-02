@@ -7,15 +7,25 @@
 
 import UIKit
 
+protocol TrackerCollectonViewManagerProtocolDelegate: AnyObject {
+    func completeTracker(tracker: Tracker, indexPath: IndexPath)
+}
+
 protocol TrackerCollectonViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource  {
+    var delegate: TrackerCollectonViewManagerProtocolDelegate? { get set }
     func createLayout() -> UICollectionViewCompositionalLayout
-    func configure(trackersDataProvider: TrackersDataProvider)
     func updateCollectionView()
+    func setupCollectionView()
+    func completeTracker(tracker: Tracker, for date: Date, indexPath: IndexPath)
+    func updateDate(newDate: Date)
 }
 
 final class TrackerCollectonViewManager: NSObject, TrackerCollectonViewManagerProtocol {
-    private var trackersDataProvider: TrackersDataProvider
-    private var collectionView: UICollectionView
+    private let trackersDataProvider: TrackersDataProvider
+    private let collectionView: UICollectionView
+    private var selectedDate: Date?
+    
+    weak var delegate: TrackerCollectonViewManagerProtocolDelegate?
     
     init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView) {
         self.trackersDataProvider = trackersDataProvider
@@ -33,25 +43,32 @@ final class TrackerCollectonViewManager: NSObject, TrackerCollectonViewManagerPr
             return section
         }
         let config = UICollectionViewCompositionalLayoutConfiguration()
-        config.interSectionSpacing = 16
+        config.interSectionSpacing = 16.dvs
         layout.configuration = config
         
         return layout
     }
     
-    func configure(trackersDataProvider: TrackersDataProvider) {
-        self.trackersDataProvider = trackersDataProvider
+    func setupCollectionView() {
+        collectionView.setCollectionViewLayout(createLayout(), animated: false)
+        collectionView.delegate = self
+        collectionView.dataSource = self
     }
     
     func updateCollectionView() {
-        guard let addedIndexPath = trackersDataProvider.addedIndexPath else { return }
-        collectionView.performBatchUpdates {
-            if collectionView.numberOfSections == addedIndexPath.section {
-                collectionView.insertSections([addedIndexPath.section])
+        collectionView.reloadData()
+    }
+    
+    func completeTracker(tracker: Tracker, for date: Date, indexPath: IndexPath) {
+        trackersDataProvider.completeTracker(tracker: tracker, for: date) { 
+            collectionView.performBatchUpdates {
+                collectionView.reloadItems(at: [indexPath])
             }
-            collectionView.insertItems(at: [addedIndexPath])
-            
         }
+    }
+    
+    func updateDate(newDate: Date) {
+        selectedDate = newDate
     }
 }
 
@@ -66,7 +83,7 @@ extension TrackerCollectonViewManager {
                 for: indexPath
             ) as? TrackerHeaderCell else { return UICollectionReusableView() }
             
-            let titleSection = trackersDataProvider.categories[safe: indexPath.section]?.title ?? ""
+            let titleSection = trackersDataProvider.visibleCategories[safe: indexPath.section]?.title ?? ""
             header.configure(title: titleSection)
             return header
         }
@@ -74,15 +91,15 @@ extension TrackerCollectonViewManager {
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        trackersDataProvider.categories.count
+        trackersDataProvider.visibleCategories.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        trackersDataProvider.categories[safe: section]?.trackers.count ?? 0
+        trackersDataProvider.visibleCategories[safe: section]?.trackers.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let tracker = trackersDataProvider.categories[indexPath.section].trackers[indexPath.item]
+        let tracker = trackersDataProvider.visibleCategories[indexPath.section].trackers[indexPath.item]
         guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: TrackerCell.reuseID,
             for: indexPath
@@ -91,10 +108,11 @@ extension TrackerCollectonViewManager {
         }
         
         let completedDays = trackersDataProvider.completedDays(for: tracker)
-        let isCompleted = trackersDataProvider.isCompleted(tracker, on: Date())
+        let isCompleted = trackersDataProvider.isCompleted(tracker, on: selectedDate)
         cell.configure(with: tracker, days: completedDays, isCompleted: isCompleted)
         cell.completeTracker = { [weak self] in
-            self?.trackersDataProvider.completeTracker(tracker: tracker, for: Date())
+            guard let self else { return }
+            delegate?.completeTracker(tracker: tracker, indexPath: indexPath)
         }
         
         return cell
@@ -104,8 +122,8 @@ extension TrackerCollectonViewManager {
 private extension TrackerCollectonViewManager {
     func makeHeader() -> NSCollectionLayoutBoundarySupplementaryItem {
         let headerSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(34)
+            widthDimension: .fractionalWidth(1),
+            heightDimension: .absolute(34.dvs)
         )
         let headerItem = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: headerSize,
@@ -120,22 +138,22 @@ private extension TrackerCollectonViewManager {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(0.5),
-                heightDimension: .absolute(148)
+                heightDimension: .absolute(148.dvs)
             )
         )
         
         let group = NSCollectionLayoutGroup.horizontal(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(148)
+                heightDimension: .absolute(148.dvs)
             ),
             subitems: [item]
         )
-        group.interItemSpacing = .fixed(9)
+        group.interItemSpacing = .fixed(9.dhs)
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-        section.interGroupSpacing = 16
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
+        section.interGroupSpacing = 16.dhs
         return section
     }
 }

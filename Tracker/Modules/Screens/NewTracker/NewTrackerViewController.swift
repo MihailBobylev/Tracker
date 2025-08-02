@@ -12,7 +12,7 @@ final class NewTrackerViewController: UIViewController {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Новая привычка"
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 16.dfs, weight: .medium)
         label.textAlignment = .center
         return label
     }()
@@ -22,7 +22,10 @@ final class NewTrackerViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.register(TitleTextFieldCell.self, forCellWithReuseIdentifier: TitleTextFieldCell.reuseID)
         collectionView.register(DetailsCell.self, forCellWithReuseIdentifier: DetailsCell.reuseID)
-        collectionView.contentInset.top = 24
+        collectionView.contentInset.top = 24.dvs
+        collectionView.contentInset.bottom = 24.dvs
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .onDrag
         return collectionView
     }()
@@ -31,7 +34,7 @@ final class NewTrackerViewController: UIViewController {
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.distribution = .fillEqually
-        stackView.spacing = 8
+        stackView.spacing = 8.dhs
         return stackView
     }()
     
@@ -51,7 +54,6 @@ final class NewTrackerViewController: UIViewController {
     }()
     
     private var viewModel: NewTrackerViewModelProtocol
-    private var mainCollectionViewManager: MainCollectionViewManagerProtocol?
     
     init(viewModel: NewTrackerViewModelProtocol) {
         self.viewModel = viewModel
@@ -66,29 +68,14 @@ final class NewTrackerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupAppearance()
-        setupResponsibilities()
+        viewModel.configureTrackerCollectonViewManager(with: mainCollectionView)
         view.addKeyboardDismissTap()
     }
 }
 
 extension NewTrackerViewController: NewTrackerViewModelDelegate {
-    func updateScheduleInfo(with text: String?) {
-        mainCollectionViewManager?.updateSelectedWeekday(with: text)
-    }
-}
-
-extension NewTrackerViewController: MainCollectionViewManagerDelegate {
-    func reloadItems(at indexPath: [IndexPath]) {
-        mainCollectionView.reloadItems(at: indexPath)
-    }
-    
-    func didSelectItem(at type: NewTrackerSectionType.Details) {
-        viewModel.didSelectItem(at: type)
-    }
-    
-    func updateEnteredText(newText: String) {
-        viewModel.updateEnteredText(newText: newText)
+    func changeButtonState(to isEnabled: Bool) {
+        doneButton.isEnabled = isEnabled
     }
 }
 
@@ -103,43 +90,27 @@ private extension NewTrackerViewController {
         buttonsHStack.addArrangedSubview(doneButton)
         
         titleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(27)
+            make.top.equalToSuperview().offset(27.dvs)
             make.leading.trailing.equalToSuperview()
         }
         
         mainCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(14)
+            make.top.equalTo(titleLabel.snp.bottom).offset(14.dvs)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(buttonsHStack.snp.top).inset(-16)
+            make.bottom.equalTo(buttonsHStack.snp.top).inset(-16.dvs)
         }
         
         buttonsHStack.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide)
-            make.leading.trailing.equalToSuperview().inset(20)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(16.dvs)
+            make.leading.trailing.equalToSuperview().inset(20.dhs)
         }
         
         cancelButton.snp.makeConstraints { make in
-            make.height.equalTo(60)
+            make.height.equalTo(60.dvs)
         }
         
         doneButton.snp.makeConstraints { make in
-            make.height.equalTo(60)
-        }
-    }
-    
-    func setupAppearance() {
-        mainCollectionViewManager = MainCollectionViewManager(sections: viewModel.getSections())
-        guard let mainCollectionViewManager else { return }
-        mainCollectionViewManager.delegate = self
-        let layout = mainCollectionViewManager.createLayout()
-        mainCollectionView.setCollectionViewLayout(layout, animated: false)
-        mainCollectionView.delegate = mainCollectionViewManager
-        mainCollectionView.dataSource = mainCollectionViewManager
-    }
-    
-    func setupResponsibilities() {
-        viewModel.onButtonStateChange = { [weak self] isEnabled in
-            self?.doneButton.isEnabled = isEnabled
+            make.height.equalTo(60.dvs)
         }
     }
     

@@ -15,7 +15,7 @@ final class TrackerHeaderCell: UICollectionReusableView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 19, weight: .bold)
+        label.font = .systemFont(ofSize: 19.dfs, weight: .bold)
         label.textColor = .veryDark
         label.textAlignment = .left
         label.numberOfLines = 1
@@ -43,9 +43,9 @@ private extension TrackerHeaderCell {
         
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
-            make.leading.equalToSuperview().offset(12)
+            make.leading.equalToSuperview().offset(12.dhs)
             make.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().inset(12)
+            make.bottom.equalToSuperview().inset(12.dvs)
         }
     }
 }

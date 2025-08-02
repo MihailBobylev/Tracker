@@ -17,7 +17,7 @@ final class TitleTextFieldCell: UICollectionViewCell {
         let stackView = UIStackView()
         stackView.axis = .vertical
         stackView.distribution = .fill
-        stackView.spacing = 8
+        stackView.spacing = 8.dvs
         return stackView
     }()
     
@@ -26,13 +26,13 @@ final class TitleTextFieldCell: UICollectionViewCell {
         tf.delegate = self
         tf.borderStyle = .roundedRect
         tf.placeholder = "Введите название трекера"
-        tf.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         tf.returnKeyType = .done
         tf.borderStyle = .none
         tf.clearButtonMode = .whileEditing
         tf.backgroundColor = UIColor(resource: .grayLightBlue)
         tf.layer.cornerRadius = 16
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16.dhs, height: 0))
         tf.leftViewMode = .always
         tf.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
         return tf
@@ -42,7 +42,7 @@ final class TitleTextFieldCell: UICollectionViewCell {
         let label = UILabel()
         label.text = "Ограничение 38 символов"
         label.textColor = UIColor(resource: .redSoft)
-        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         label.textAlignment = .center
         label.isHidden = true
         label.numberOfLines = 1
@@ -96,7 +96,7 @@ private extension TitleTextFieldCell {
         }
         
         textField.snp.makeConstraints { make in
-            make.height.equalTo(75)
+            make.height.equalTo(75.dvs)
         }
     }
 }

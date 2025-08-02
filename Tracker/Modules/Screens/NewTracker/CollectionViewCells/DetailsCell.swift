@@ -31,7 +31,7 @@ final class DetailsCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor(resource: .veryDark)
-        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         label.textAlignment = .left
         return label
     }()
@@ -39,7 +39,7 @@ final class DetailsCell: UICollectionViewCell {
     private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIColor(resource: .grayishBlue)
-        label.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         label.textAlignment = .left
         return label
     }()
@@ -55,6 +55,7 @@ final class DetailsCell: UICollectionViewCell {
         let switchView = UISwitch()
         switchView.isOn = false
         switchView.addTarget(self, action: #selector(switchChanged), for: .valueChanged)
+        switchView.onTintColor = .primaryBlue
         switchView.isHidden = true
         return switchView
     }()
@@ -116,14 +117,14 @@ private extension DetailsCell {
         
         mainHStack.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(16)
+            make.leading.trailing.equalToSuperview().inset(16.dhs)
         }
         
         switch accessory {
         case .chevron:
             mainHStack.addArrangedSubview(arrowImageView)
             arrowImageView.snp.makeConstraints { make in
-                make.width.height.equalTo(24)
+                make.width.height.equalTo(24.dhs)
             }
         case .switcher:
             mainHStack.addArrangedSubview(accessorySwitch)
@@ -131,7 +132,7 @@ private extension DetailsCell {
 
         separatorView.snp.makeConstraints { make in
             make.height.equalTo(1)
-            make.leading.trailing.equalToSuperview().inset(16)
+            make.leading.trailing.equalToSuperview().inset(16.dhs)
             make.bottom.equalToSuperview()
         }
     }

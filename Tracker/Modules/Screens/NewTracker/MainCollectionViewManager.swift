@@ -9,24 +9,34 @@ import UIKit
 
 protocol MainCollectionViewManagerDelegate: AnyObject {
     func didSelectItem(at type: NewTrackerSectionType.Details)
-    func reloadItems(at indexPath: [IndexPath])
     func updateEnteredText(newText: String)
 }
 
 protocol MainCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource {
     var delegate: MainCollectionViewManagerDelegate? { get set }
     func createLayout() -> UICollectionViewCompositionalLayout
+    func setupCollectionView()
     func updateSelectedWeekday(with text: String?)
 }
 
 final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtocol {
+    private let trackersDataProvider: TrackersDataProvider
+    private let collectionView: UICollectionView
     private var sections: [NewTrackerSectionType]
     
     weak var delegate: MainCollectionViewManagerDelegate?
     
-    init(sections: [NewTrackerSectionType]) {
+    init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView, sections: [NewTrackerSectionType]) {
+        self.trackersDataProvider = trackersDataProvider
+        self.collectionView = collectionView
         self.sections = sections
         super.init()
+    }
+    
+    func setupCollectionView() {
+        collectionView.setCollectionViewLayout(createLayout(), animated: false)
+        collectionView.delegate = self
+        collectionView.dataSource = self
     }
     
     func createLayout() -> UICollectionViewCompositionalLayout {
@@ -44,7 +54,7 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
             return section
         }
         let config = UICollectionViewCompositionalLayoutConfiguration()
-        config.interSectionSpacing = 24
+        config.interSectionSpacing = 24.dvs
         layout.configuration = config
         layout.register(DetailsBackgroundDecorationView.self, forDecorationViewOfKind: DetailsBackgroundDecorationView.identifier)
         
@@ -74,7 +84,7 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
                 return false
             }) {
                 let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
-                delegate?.reloadItems(at: [indexPath])
+                collectionView.reloadItems(at: [indexPath])
             }
         }
     }
@@ -146,20 +156,20 @@ private extension MainCollectionViewManager {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(75)
+                heightDimension: .estimated(75.dvs)
             )
         )
         
         let group = NSCollectionLayoutGroup.vertical(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .estimated(75)
+                heightDimension: .estimated(75.dvs)
             ),
             subitems: [item]
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
         
         return section
     }
@@ -168,23 +178,23 @@ private extension MainCollectionViewManager {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(75)
+                heightDimension: .absolute(75.dvs)
             )
         )
         
         let group = NSCollectionLayoutGroup.vertical(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1),
-                heightDimension: .absolute(75)
+                heightDimension: .absolute(75.dvs)
             ),
-            subitems: [item, item]
+            subitems: [item]
         )
         
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
         
         let backgroundItem = NSCollectionLayoutDecorationItem.background(elementKind: DetailsBackgroundDecorationView.identifier)
-        backgroundItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        backgroundItem.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16.dhs, bottom: 0, trailing: 16.dhs)
         section.decorationItems = [backgroundItem]
         
         return section

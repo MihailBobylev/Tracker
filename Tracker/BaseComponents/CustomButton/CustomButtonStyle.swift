@@ -26,23 +26,23 @@ enum CustomButtonStyle {
             ? StyleState(backgroundColor: .veryDark,
                          borderColor: .clear,
                          titleColor: .white,
-                         font: UIFont.systemFont(ofSize: 16, weight: .medium))
+                         font: UIFont.systemFont(ofSize: 16.dfs, weight: .medium))
             : StyleState(backgroundColor: .grayishBlue,
                          borderColor: .clear,
                          titleColor: .white,
-                         font: UIFont.systemFont(ofSize: 16, weight: .medium))
+                         font: UIFont.systemFont(ofSize: 16.dfs, weight: .medium))
             
         case .secondary:
             return StyleState(backgroundColor: .primaryBlue,
                               borderColor: .clear,
                               titleColor: .white,
-                              font: UIFont.systemFont(ofSize: 17, weight: .regular))
+                              font: UIFont.systemFont(ofSize: 17.dfs, weight: .regular))
             
         case .outline:
             return StyleState(backgroundColor: .white,
                               borderColor: .redSoft,
                               titleColor: .redSoft,
-                              font: UIFont.systemFont(ofSize: 16, weight: .medium))
+                              font: UIFont.systemFont(ofSize: 16.dfs, weight: .medium))
         }
     }
 }
