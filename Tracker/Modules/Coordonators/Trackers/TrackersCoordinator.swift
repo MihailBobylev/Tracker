@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class TrackersCoordinator: TabBarPresentableCoorinator {
+final class TrackersCoordinator: TabBarPresentableCoordinator {
     private var trackerViewModel: TrackersViewModel?
     private let trackersDataProvider = TrackersDataProvider()
     
@@ -21,8 +21,8 @@ final class TrackersCoordinator: TabBarPresentableCoorinator {
     
     var navigationController: UINavigationController
 
-    init(navigaton: UINavigationController) {
-        self.navigationController = navigaton
+    init(navigation: UINavigationController) {
+        self.navigationController = navigation
     }
     
     func start() {

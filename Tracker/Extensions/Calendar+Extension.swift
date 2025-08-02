@@ -9,11 +9,11 @@ import Foundation
 
 extension Calendar {
     func isDateInFuture(_ date: Date) -> Bool {
-        return startOfDay(for: date) > startOfDay(for: Date())
+        startOfDay(for: date) > startOfDay(for: Date())
     }
     
     func weekdayType(from date: Date) -> WeekdayType? {
-        let weekday = self.component(.weekday, from: date)
+        let weekday = component(.weekday, from: date)
         return switch weekday {
         case 1: .sunday
         case 2: .monday

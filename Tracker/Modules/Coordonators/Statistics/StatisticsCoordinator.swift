@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class StatisticsCoordinator: TabBarPresentableCoorinator {
+final class StatisticsCoordinator: TabBarPresentableCoordinator {
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icStatisticsSelected)
         let unselected = UIImage(resource: .icStatisticsUnselected)
@@ -18,8 +18,8 @@ final class StatisticsCoordinator: TabBarPresentableCoorinator {
     
     var navigationController: UINavigationController
 
-    init(navigaton: UINavigationController) {
-        self.navigationController = navigaton
+    init(navigation: UINavigationController) {
+        self.navigationController = navigation
     }
     
     func start() {

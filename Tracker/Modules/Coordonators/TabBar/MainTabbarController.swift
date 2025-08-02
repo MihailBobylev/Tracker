@@ -7,14 +7,14 @@
 
 import UIKit
 
-// MARK: - TabBarPresentableCoorinator
-protocol TabBarPresentableCoorinator: Coordinator {
+// MARK: - TabBarPresentableCoordinator
+protocol TabBarPresentableCoordinator: Coordinator {
     var tabBarItem: UITabBarItem { get }
 }
 
 final class MainTabbarController: UITabBarController {
     
-    private var coordinators: [TabBarPresentableCoorinator] = []
+    private var coordinators: [TabBarPresentableCoordinator] = []
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -28,8 +28,8 @@ final class MainTabbarController: UITabBarController {
     }
     
     private func fillCoordinators() {
-        let trackersCoordinator = TrackersCoordinator(navigaton: UINavigationController())
-        let statisticsCoordinator = StatisticsCoordinator(navigaton: UINavigationController())
+        let trackersCoordinator = TrackersCoordinator(navigation: UINavigationController())
+        let statisticsCoordinator = StatisticsCoordinator(navigation: UINavigationController())
 
         coordinators = [
             trackersCoordinator,

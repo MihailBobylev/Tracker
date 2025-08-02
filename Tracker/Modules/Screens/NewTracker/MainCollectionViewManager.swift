@@ -22,6 +22,7 @@ protocol MainCollectionViewManagerProtocol: UICollectionViewDelegate, UICollecti
 final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtocol {
     private let trackersDataProvider: TrackersDataProvider
     private let collectionView: UICollectionView
+    private let maxNumberOfCharacters = 38
     private var sections: [NewTrackerSectionType]
     
     weak var delegate: MainCollectionViewManagerDelegate?
@@ -109,8 +110,9 @@ extension MainCollectionViewManager {
             ) as? TitleTextFieldCell else {
                 return UICollectionViewCell()
             }
-            cell.onTextChanged = { text in
-                let isError = text.count >= 38
+            cell.onTextChanged = { [weak self] text in
+                guard let self else { return }
+                let isError = text.count >= maxNumberOfCharacters
                 if cell.errorLabelIsVisible != isError {
                     cell.changeErrorState(isError: isError)
                     collectionView.performBatchUpdates(nil)
