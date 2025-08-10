@@ -13,8 +13,8 @@ protocol NewTrackerViewModelDelegate: AnyObject {
 
 protocol NewTrackerViewModelProtocol {
     var delegate: NewTrackerViewModelDelegate? { get set }
-    func getSections() -> [NewTrackerSectionType]
-    func configureTrackerCollectonViewManager(with collectionView: UICollectionView)
+    func getSections() -> [NewTrackerSection]
+    func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func updateSelectedWeekdays(_ days: Set<WeekdayType>)
     func doneButtonTapped()
 }
@@ -35,6 +35,17 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
             updateButtonState()
         }
     }
+    private var trackerEmoji: String = "" {
+        didSet {
+            updateButtonState()
+        }
+    }
+    
+    private var trackerColor: UIColor? {
+        didSet {
+            updateButtonState()
+        }
+    }
     
     weak var delegate: NewTrackerViewModelDelegate?
     
@@ -44,7 +55,7 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
         self.trackersDataProvider = trackersDataProvider
     }
     
-    func configureTrackerCollectonViewManager(with collectionView: UICollectionView) {
+    func configureTrackerCollectionViewManager(with collectionView: UICollectionView) {
         mainCollectionViewManager = MainCollectionViewManager(trackersDataProvider: trackersDataProvider,
                                                               collectionView: collectionView,
                                                               sections: newTrackerService.fetchNewTrackerSections())
@@ -52,7 +63,7 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
         mainCollectionViewManager?.delegate = self
     }
     
-    func getSections() -> [NewTrackerSectionType] {
+    func getSections() -> [NewTrackerSection] {
         newTrackerService.fetchNewTrackerSections()
     }
     
@@ -61,26 +72,41 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     }
 
     func doneButtonTapped() {
+        guard let color = trackerColor else { return }
         let createdTracker = Tracker(title: trackerTitle,
-                                     color: .green,
-                                     emoji: "😍",
+                                     color: color,
+                                     emoji: trackerEmoji,
                                      schedule: selectedWeekdays)
-        coordinator.didFinishCreatingNewTracker(createdTracker, categotyTitle: "Домашний уют")
+        coordinator.didFinishCreatingNewTracker(createdTracker, categoryTitle: "Домашний уют")
     }
 }
 
 extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
-    func didSelectItem(at type: NewTrackerSectionType.Details) {
+    func didSelectItem(at type: NewTrackerSection, indexPath: IndexPath) {
         switch type {
-        case .category:
-            coordinator.goToCategory()
-        case .schedule:
-            coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
+        case let type as DetailsSection:
+            let subItem = type.models[indexPath.item]
+            switch subItem {
+            case .category:
+                break
+            case .schedule:
+                coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
+            }
+        default:
+            break
         }
     }
     
     func updateEnteredText(newText: String) {
         trackerTitle = newText
+    }
+    
+    func updateSelectedEmoji(emoji: String) {
+        trackerEmoji = emoji
+    }
+    
+    func updateSelectedColor(color: UIColor) {
+        trackerColor = color
     }
 }
 
@@ -90,7 +116,7 @@ private extension NewTrackerViewModel {
     }
     
     func updateButtonState() {
-        let isEnabled = !trackerTitle.isEmpty && !selectedWeekdays.isEmpty
+        let isEnabled = !trackerTitle.isEmpty && !selectedWeekdays.isEmpty && !trackerEmoji.isEmpty && trackerColor != nil
         delegate?.changeButtonState(to: isEnabled)
     }
 }

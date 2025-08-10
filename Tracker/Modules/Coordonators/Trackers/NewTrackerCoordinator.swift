@@ -36,8 +36,8 @@ final class NewTrackerCoordinator: Coordinator {
         )
     }
     
-    func didFinishCreatingNewTracker(_ tracker: Tracker, categotyTitle: String) {
-        onFinishCreatingTracker?(tracker, categotyTitle)
+    func didFinishCreatingNewTracker(_ tracker: Tracker, categoryTitle: String) {
+        onFinishCreatingTracker?(tracker, categoryTitle)
         navigationController.dismiss(animated: true)
     }
 }
