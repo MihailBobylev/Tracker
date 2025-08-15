@@ -7,72 +7,52 @@
 
 import Foundation
 
+protocol TrackersDataProviderDelegate: AnyObject {
+    func updateCollection(didUpdate update: TrackerStoreUpdate?)
+}
+
 final class TrackersDataProvider {
     private let calendar = Calendar.current
-    private var categories: [TrackerCategory] = []
-    private var completedTrackers: [TrackerRecord] = []
+    private let trackerRecordStore = TrackerRecordStore()
     
-    var visibleCategories: [TrackerCategory] = [] {
-        didSet {
-            categoriesChanged?(visibleCategories.isEmpty)
-        }
-    }
-
-    var categoriesChanged: ((Bool) -> Void)?
+    lazy var trackerStore: TrackerStore = {
+        let store = TrackerStore()
+        store.delegate = self
+        return store
+    }()
+    
+    weak var delegate: TrackersDataProviderDelegate?
     
     func trackers(for date: Date) {
-        guard let weekday = calendar.weekdayType(from: date) else { return }
-        
-        visibleCategories = categories.compactMap { category in
-            let newCategory = TrackerCategory(
-                title: category.title,
-                trackers: category.trackers.filter { tracker in
-                    tracker.schedule.contains(weekday)
-                }
-            )
-            
-            return newCategory.trackers.count > 0 ? newCategory : nil
+        guard let weekday = calendar.weekdayType(from: date) else {
+            return
         }
+        trackerStore.reconfigureFetchedResultsController(for: weekday)
+    }
+
+    func tracker(from coreData: TrackerCoreData) -> Tracker? {
+        trackerStore.tracker(from: coreData)
     }
     
-    func isCompleted(_ tracker: Tracker, on date: Date?) -> Bool {
-        guard let date else { return false }
-        return completedTrackers.contains { $0.id == tracker.id && calendar.isDate($0.completionDate, inSameDayAs: date) }
+    func isCompleted(_ tracker: Tracker, on date: Date) -> Bool {
+        trackerRecordStore.isTrackerCompleted(tracker, on: date)
     }
     
     func completedDays(for tracker: Tracker) -> Int {
-        completedTrackers.filter { $0.id == tracker.id }.count
+        trackerRecordStore.completionCount(for: tracker)
     }
     
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
-        var newCategories: [TrackerCategory] = []
-        var didAdd = false
-        
-        for category in categories {
-            if category.title == categoryTitle {
-                let updatedTrackers = category.trackers + [tracker]
-                let updatedCategory = TrackerCategory(title: category.title, trackers: updatedTrackers)
-                newCategories.append(updatedCategory)
-                didAdd = true
-            } else {
-                newCategories.append(category)
-            }
-        }
-        
-        if !didAdd {
-            let newCategory = TrackerCategory(title: categoryTitle, trackers: [tracker])
-            newCategories.append(newCategory)
-        }
-        categories = newCategories
+        try? trackerStore.addTracker(tracker, to: categoryTitle)
     }
     
-    func completeTracker(tracker: Tracker, for date: Date, wasAdded: (() -> Void)) {
-        let trackerRecord = TrackerRecord(id: tracker.id, completionDate: date)
-        if let index = completedTrackers.firstIndex(where: { $0.id == trackerRecord.id && calendar.isDate($0.completionDate, inSameDayAs: date) }) {
-            completedTrackers.remove(at: index)
-        } else {
-            completedTrackers.append(trackerRecord)
-        }
-        wasAdded()
+    func completeTracker(tracker: Tracker, for date: Date) {
+        try? trackerRecordStore.toggleRecord(for: tracker, on: date)
+    }
+}
+
+extension TrackersDataProvider: TrackerStoreDelegate {
+    func store(didUpdate update: TrackerStoreUpdate?) {
+        delegate?.updateCollection(didUpdate: update)
     }
 }
