@@ -8,21 +8,6 @@
 import UIKit
 import CoreData
 
-struct TrackerStoreUpdate {
-    struct Move: Hashable {
-        let oldIndexPath: IndexPath
-        let newIndexPath: IndexPath
-    }
-    
-    let insertedSections: IndexSet
-    let deletedSections: IndexSet
-    
-    let insertedIndexPaths: Set<IndexPath>
-    let deletedIndexPaths: Set<IndexPath>
-    let updatedIndexPaths: Set<IndexPath>
-    let movedIndexPaths: Set<Move>
-}
-
 protocol TrackerStoreDelegate: AnyObject {
     func store(
         didUpdate update: TrackerStoreUpdate?
@@ -30,7 +15,6 @@ protocol TrackerStoreDelegate: AnyObject {
 }
 
 final class TrackerStore: NSObject {
-    private let uiColorMarshalling = UIColorMarshalling()
     private let context: NSManagedObjectContext
     var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
     
@@ -95,7 +79,7 @@ final class TrackerStore: NSObject {
         trackerCoreData.id = tracker.id
         trackerCoreData.title = tracker.title
         trackerCoreData.emoji = tracker.emoji
-        trackerCoreData.color = uiColorMarshalling.hexString(from: tracker.color)
+        trackerCoreData.color = tracker.color.hexString
         trackerCoreData.schedule = tracker.schedule
             .map { $0.mask }
             .joined()
@@ -125,7 +109,7 @@ final class TrackerStore: NSObject {
               let emoji = coreData.emoji,
               let colorHex = coreData.color else { return nil }
 
-        let color = uiColorMarshalling.color(from: colorHex)
+        let color = UIColor(hex: colorHex)
         
         var schedule: Set<WeekdayType> = []
         if let scheduleString = coreData.schedule {
@@ -169,6 +153,7 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
         updatedIndexPaths = []
         movedIndexPaths = []
     }
+    
     func controller(_ controller: NSFetchedResultsController<any NSFetchRequestResult>,
                     didChange sectionInfo: any NSFetchedResultsSectionInfo,
                     atSectionIndex sectionIndex: Int,

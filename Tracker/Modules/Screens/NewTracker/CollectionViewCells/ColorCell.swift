@@ -9,9 +9,13 @@ import UIKit
 import SnapKit
 
 final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
+    // MARK: - Static Properties
+    
     static var reuseID: String {
         String(describing: Self.self)
     }
+    
+    // MARK: - Private Properties
     
     private var mainColor: UIColor?
     
@@ -21,6 +25,8 @@ final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
         view.layer.borderColor = UIColor.white.cgColor
         return view
     }()
+    
+    // MARK: - Initializers
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -32,12 +38,16 @@ final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - UICollectionViewCell
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         backgroundColor = .white
         colorView.layer.borderWidth = 0
     }
 }
+
+// MARK: - Public Methods
 
 extension ColorCell {
     func configure(color: UIColor) {
@@ -50,6 +60,8 @@ extension ColorCell {
         colorView.layer.borderWidth = isSelected ? 3 : 0
     }
 }
+
+// MARK: - Private Methods
 
 private extension ColorCell {
     func setupUI() {

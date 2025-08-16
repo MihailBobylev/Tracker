@@ -5,30 +5,48 @@
 //  Created by Михаил Бобылев on 29.07.2025.
 //
 
+
 import Foundation
+import UIKit
 
 final class NewTrackerService {
+    
     func fetchNewTrackerSections() -> [NewTrackerSection] {
         return [
-            TextFieldSection(sectionType: .titleTextField),
-            DetailsSection(sectionType: .details, models: [
-                .category(subtitle: nil),
-                .schedule(subtitle: nil)
-            ]),
-            EmojiSection(sectionType: .emoji, sectionTitle: "Emoji", models: [
-                .init(emoji: "🙂"), .init(emoji: "😻"), .init(emoji: "🌺"), .init(emoji: "🐶"),
-                .init(emoji: "❤️"), .init(emoji: "😱"), .init(emoji: "😇"), .init(emoji: "😡"),
-                .init(emoji: "🥶"), .init(emoji: "🤔"), .init(emoji: "🙌"), .init(emoji: "🍔"),
-                .init(emoji: "🥦"), .init(emoji: "🏓"), .init(emoji: "🥇"), .init(emoji: "🎸"),
-                .init(emoji: "🏝"), .init(emoji: "😪")
-            ]),
-            ColorsSection(sectionType: .customColor, sectionTitle: "Цвет", models: [
-                .init(color: .section1), .init(color: .section2), .init(color: .section3), .init(color: .section4),
-                .init(color: .section5), .init(color: .section6), .init(color: .section7), .init(color: .section8),
-                .init(color: .section9), .init(color: .section10), .init(color: .section11), .init(color: .section12),
-                .init(color: .section13), .init(color: .section14), .init(color: .section15), .init(color: .section16),
-                .init(color: .section17), .init(color: .section18)
-            ])
+            titleSection,
+            detailsSection,
+            emojiSection,
+            colorSection
         ]
     }
+    
+    // MARK: - Private Sections
+
+    private var titleSection: NewTrackerSection {
+        TextFieldSection(sectionType: .titleTextField)
+    }
+    
+    private var detailsSection: NewTrackerSection {
+        DetailsSection(sectionType: .details, models: [
+            .category(subtitle: nil),
+            .schedule(subtitle: nil)
+        ])
+    }
+
+    private var emojiSection: NewTrackerSection {
+        let emojis = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
+        let models = emojis.map { EmojiSection.Emoji(emoji: $0) }
+        return EmojiSection(sectionType: .emoji, sectionTitle: "Emoji", models: models)
+    }
+    
+    private var colorSection: NewTrackerSection {
+        let colors: [UIColor] = [
+            .section1, .section2, .section3, .section4, .section5, .section6,
+            .section7, .section8, .section9, .section10, .section11, .section12,
+            .section13, .section14, .section15, .section16, .section17, .section18
+        ]
+        let models = colors.map { ColorsSection.CustomColor(color: $0) }
+        return ColorsSection(sectionType: .customColor, sectionTitle: "Цвет", models: models)
+    }
 }
+

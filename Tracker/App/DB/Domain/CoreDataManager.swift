@@ -15,6 +15,9 @@ final class CoreDataManager {
     static let shared = CoreDataManager()
     
     let container: NSPersistentContainer
+    var context: NSManagedObjectContext {
+        container.viewContext
+    }
     
     private init() {
         container = NSPersistentContainer(name: Constants.dbName)
@@ -23,9 +26,5 @@ final class CoreDataManager {
                 fatalError("Ошибка загрузки Core Data: \(error)")
             }
         }
-    }
-    
-    var context: NSManagedObjectContext {
-        container.viewContext
     }
 }
