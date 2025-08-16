@@ -92,7 +92,7 @@ final class TrackersViewController: UIViewController {
         super.viewDidLoad()
         configureNavBar()
         setupUI()
-        viewModel.configureTrackerCollectonViewManager(with: mainCollectionView)
+        viewModel.configureTrackerCollectionViewManager(with: mainCollectionView)
         viewModel.selectedDate = datePicker.date
         view.addKeyboardDismissTap()
     }

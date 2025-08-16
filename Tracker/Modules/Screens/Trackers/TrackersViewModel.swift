@@ -14,7 +14,7 @@ protocol TrackersViewModelDelegate: AnyObject {
 protocol TrackersViewModelProtocol {
     var selectedDate: Date { get set }
     var delegate: TrackersViewModelDelegate? { get set }
-    func configureTrackerCollectonViewManager(with collectionView: UICollectionView)
+    func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func goToAddNewTrackerScreen()
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String)
 }
@@ -24,7 +24,7 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     private let trackersDataProvider: TrackersDataProvider
     private let calendar = Calendar.current
     private let feedbackGenerator = UINotificationFeedbackGenerator()
-    private var trackerCollectonViewManager: TrackerCollectonViewManagerProtocol?
+    private var trackerCollectionViewManager: TrackerCollectionViewManagerProtocol?
     
     var selectedDate = Date() {
         didSet {
@@ -37,14 +37,15 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     init(coordinator: TrackersCoordinator, trackersDataProvider: TrackersDataProvider) {
         self.coordinator = coordinator
         self.trackersDataProvider = trackersDataProvider
-        setupResponsibilities()
+        self.trackersDataProvider.delegate = self
     }
     
-    func configureTrackerCollectonViewManager(with collectionView: UICollectionView) {
-        trackerCollectonViewManager = TrackerCollectonViewManager(trackersDataProvider: trackersDataProvider,
-                                                                  collectionView: collectionView)
-        trackerCollectonViewManager?.delegate = self
-        trackerCollectonViewManager?.setupCollectionView()
+    func configureTrackerCollectionViewManager(with collectionView: UICollectionView) {
+        trackerCollectionViewManager = TrackerCollectionViewManager(selectedDate: selectedDate,
+                                                                    trackersDataProvider: trackersDataProvider,
+                                                                    collectionView: collectionView)
+        trackerCollectionViewManager?.delegate = self
+        trackerCollectionViewManager?.setupCollectionView()
     }
     
     func goToAddNewTrackerScreen() {
@@ -55,33 +56,33 @@ final class TrackersViewModel: TrackersViewModelProtocol {
         trackersDataProvider.addNewTracker(tracker, to: categoryTitle)
         updateTrackers(for: selectedDate)
     }
-    
-    private func updateTrackers(for date: Date) {
-        trackersDataProvider.trackers(for: date)
-    }
 }
 
-extension TrackersViewModel: TrackerCollectonViewManagerProtocolDelegate {
+extension TrackersViewModel: TrackerCollectionViewManagerProtocolDelegate {
     func completeTracker(tracker: Tracker, indexPath: IndexPath) {
         guard !calendar.isDateInFuture(selectedDate) else {
             feedbackGenerator.prepare()
             feedbackGenerator.notificationOccurred(.error)
             return
         }
-        trackerCollectonViewManager?.completeTracker(tracker: tracker, for: selectedDate, indexPath: indexPath)
+        trackersDataProvider.completeTracker(tracker: tracker, for: selectedDate)
+    }
+}
+
+extension TrackersViewModel: TrackersDataProviderDelegate {
+    func updateCollection(didUpdate update: TrackerStoreUpdate?) {
+        trackerCollectionViewManager?.updateCollectionView(didUpdate: update)
+        delegate?.updateEmptyState(to: trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true)
     }
 }
 
 private extension TrackersViewModel {
-    func setupResponsibilities() {
-        trackersDataProvider.categoriesChanged = { [weak self] isEmpty in
-            guard let self else { return }
-            trackerCollectonViewManager?.updateCollectionView()
-            delegate?.updateEmptyState(to: isEmpty)
-        }
+    func updateDate(newDate: Date) {
+        trackerCollectionViewManager?.updateDate(newDate: newDate)
     }
     
-    func updateDate(newDate: Date) {
-        trackerCollectonViewManager?.updateDate(newDate: newDate)
+    func updateTrackers(for date: Date) {
+        trackersDataProvider.trackers(for: date)
+        delegate?.updateEmptyState(to: trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true)
     }
 }

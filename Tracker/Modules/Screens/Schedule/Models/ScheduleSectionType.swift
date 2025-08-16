@@ -7,8 +7,8 @@
 
 import Foundation
 
-enum WeekdayType: CaseIterable {
-    case monday
+enum WeekdayType: Int, CaseIterable, Codable {
+    case monday = 1
     case tuesday
     case wednesday
     case thursday
@@ -38,5 +38,9 @@ enum WeekdayType: CaseIterable {
         case .saturday: "Сб"
         case .sunday: "Вс"
         }
+    }
+    
+    var mask: String {
+        "\(self.rawValue)"
     }
 }

@@ -7,27 +7,27 @@
 
 import UIKit
 
-protocol TrackerCollectonViewManagerProtocolDelegate: AnyObject {
+protocol TrackerCollectionViewManagerProtocolDelegate: AnyObject {
     func completeTracker(tracker: Tracker, indexPath: IndexPath)
 }
 
-protocol TrackerCollectonViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource  {
-    var delegate: TrackerCollectonViewManagerProtocolDelegate? { get set }
+protocol TrackerCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource  {
+    var delegate: TrackerCollectionViewManagerProtocolDelegate? { get set }
     func createLayout() -> UICollectionViewCompositionalLayout
-    func updateCollectionView()
+    func updateCollectionView(didUpdate update: TrackerStoreUpdate?)
     func setupCollectionView()
-    func completeTracker(tracker: Tracker, for date: Date, indexPath: IndexPath)
     func updateDate(newDate: Date)
 }
 
-final class TrackerCollectonViewManager: NSObject, TrackerCollectonViewManagerProtocol {
+final class TrackerCollectionViewManager: NSObject, TrackerCollectionViewManagerProtocol {
     private let trackersDataProvider: TrackersDataProvider
     private let collectionView: UICollectionView
-    private var selectedDate: Date?
+    private var selectedDate: Date
     
-    weak var delegate: TrackerCollectonViewManagerProtocolDelegate?
+    weak var delegate: TrackerCollectionViewManagerProtocolDelegate?
     
-    init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView) {
+    init(selectedDate: Date, trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView) {
+        self.selectedDate = selectedDate
         self.trackersDataProvider = trackersDataProvider
         self.collectionView = collectionView
         super.init()
@@ -55,14 +55,40 @@ final class TrackerCollectonViewManager: NSObject, TrackerCollectonViewManagerPr
         collectionView.dataSource = self
     }
     
-    func updateCollectionView() {
-        collectionView.reloadData()
-    }
-    
-    func completeTracker(tracker: Tracker, for date: Date, indexPath: IndexPath) {
-        trackersDataProvider.completeTracker(tracker: tracker, for: date) { 
-            collectionView.performBatchUpdates {
-                collectionView.reloadItems(at: [indexPath])
+    func updateCollectionView(didUpdate update: TrackerStoreUpdate?) {
+        guard let update else {
+            collectionView.reloadData()
+            return
+        }
+        let insertedSections = update.insertedSections
+        let deletedSections = update.deletedSections
+        let deleted = update.deletedIndexPaths
+        let inserted = update.insertedIndexPaths
+        let updated = update.updatedIndexPaths
+        let moved = update.movedIndexPaths
+        
+        collectionView.performBatchUpdates {
+            if !deletedSections.isEmpty {
+                collectionView.deleteSections(deletedSections)
+            }
+            
+            if !insertedSections.isEmpty {
+                collectionView.insertSections(insertedSections)
+            }
+            
+            if !deleted.isEmpty {
+                collectionView.deleteItems(at: Array(deleted))
+            }
+            if !inserted.isEmpty {
+                collectionView.insertItems(at: Array(inserted))
+            }
+            if !updated.isEmpty {
+                collectionView.reloadItems(at: Array(updated))
+            }
+            if !moved.isEmpty {
+                for move in moved {
+                    collectionView.moveItem(at: move.oldIndexPath, to: move.newIndexPath)
+                }
             }
         }
     }
@@ -72,7 +98,7 @@ final class TrackerCollectonViewManager: NSObject, TrackerCollectonViewManagerPr
     }
 }
 
-extension TrackerCollectonViewManager {
+extension TrackerCollectionViewManager {
     func collectionView(_ collectionView: UICollectionView,
                         viewForSupplementaryElementOfKind kind: String,
                         at indexPath: IndexPath) -> UICollectionReusableView {
@@ -83,7 +109,7 @@ extension TrackerCollectonViewManager {
                 for: indexPath
             ) as? TrackerHeaderCell else { return UICollectionReusableView() }
             
-            let titleSection = trackersDataProvider.visibleCategories[safe: indexPath.section]?.title ?? ""
+            let titleSection = trackersDataProvider.trackerStore.fetchedResultsController?.sections?[indexPath.section].name ?? ""
             header.configure(title: titleSection)
             return header
         }
@@ -91,15 +117,14 @@ extension TrackerCollectonViewManager {
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        trackersDataProvider.visibleCategories.count
+        trackersDataProvider.trackerStore.fetchedResultsController?.sections?.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        trackersDataProvider.visibleCategories[safe: section]?.trackers.count ?? 0
+        return trackersDataProvider.trackerStore.fetchedResultsController?.sections?[section].numberOfObjects ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let tracker = trackersDataProvider.visibleCategories[indexPath.section].trackers[indexPath.item]
         guard let cell = collectionView.dequeueReusableCell(
             withReuseIdentifier: TrackerCell.reuseID,
             for: indexPath
@@ -107,19 +132,25 @@ extension TrackerCollectonViewManager {
             return UICollectionViewCell()
         }
         
-        let completedDays = trackersDataProvider.completedDays(for: tracker)
-        let isCompleted = trackersDataProvider.isCompleted(tracker, on: selectedDate)
-        cell.configure(with: tracker, days: completedDays, isCompleted: isCompleted)
-        cell.completeTracker = { [weak self] in
-            guard let self else { return }
-            delegate?.completeTracker(tracker: tracker, indexPath: indexPath)
+        
+        if let trackerCoreData = trackersDataProvider.trackerStore.fetchedResultsController?.object(at: indexPath),
+           let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
+            let completedDays = trackersDataProvider.completedDays(for: tracker)
+            let isCompleted = trackersDataProvider.isCompleted(tracker, on: selectedDate)
+            cell.configure(with: tracker, days: completedDays, isCompleted: isCompleted)
+            cell.completeTracker = { [weak self] in
+                guard let self else { return }
+                delegate?.completeTracker(tracker: tracker, indexPath: indexPath)
+            }
+            
+            return cell
         }
         
-        return cell
+        return UICollectionViewCell()
     }
 }
 
-private extension TrackerCollectonViewManager {
+private extension TrackerCollectionViewManager {
     func makeHeader() -> NSCollectionLayoutBoundarySupplementaryItem {
         let headerSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1),

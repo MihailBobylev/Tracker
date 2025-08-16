@@ -5,16 +5,48 @@
 //  Created by Михаил Бобылев on 29.07.2025.
 //
 
+
 import Foundation
+import UIKit
 
 final class NewTrackerService {
-    func fetchNewTrackerSections() -> [NewTrackerSectionType] {
+    
+    func fetchNewTrackerSections() -> [NewTrackerSection] {
         return [
-            .titleTextField,
-            .details([
-                .category(subtitle: nil),
-                .schedule(subtitle: nil)
-            ])
+            titleSection,
+            detailsSection,
+            emojiSection,
+            colorSection
         ]
     }
+    
+    // MARK: - Private Sections
+
+    private var titleSection: NewTrackerSection {
+        TextFieldSection(sectionType: .titleTextField)
+    }
+    
+    private var detailsSection: NewTrackerSection {
+        DetailsSection(sectionType: .details, models: [
+            .category(subtitle: nil),
+            .schedule(subtitle: nil)
+        ])
+    }
+
+    private var emojiSection: NewTrackerSection {
+        let emojis = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
+        let models = emojis.map { EmojiSection.Emoji(emoji: $0) }
+        return EmojiSection(sectionType: .emoji, sectionTitle: "Emoji", models: models)
+    }
+    
+    private var colorSection: NewTrackerSection {
+        let colors: [UIColor] = [
+            .section1, .section2, .section3, .section4, .section5, .section6,
+            .section7, .section8, .section9, .section10, .section11, .section12,
+            .section13, .section14, .section15, .section16, .section17, .section18
+        ]
+        let models = colors.map { ColorsSection.CustomColor(color: $0) }
+        return ColorsSection(sectionType: .customColor, sectionTitle: "Цвет", models: models)
+    }
 }
+

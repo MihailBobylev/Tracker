@@ -22,6 +22,11 @@ final class NewTrackerViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.register(TitleTextFieldCell.self, forCellWithReuseIdentifier: TitleTextFieldCell.reuseID)
         collectionView.register(DetailsCell.self, forCellWithReuseIdentifier: DetailsCell.reuseID)
+        collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseID)
+        collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseID)
+        collectionView.register(SimpleTitleHeaderView.self,
+                                forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                                withReuseIdentifier: SimpleTitleHeaderView.reuseID)
         collectionView.contentInset.top = 24.dvs
         collectionView.contentInset.bottom = 24.dvs
         collectionView.showsHorizontalScrollIndicator = false
@@ -68,7 +73,7 @@ final class NewTrackerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        viewModel.configureTrackerCollectonViewManager(with: mainCollectionView)
+        viewModel.configureTrackerCollectionViewManager(with: mainCollectionView)
         view.addKeyboardDismissTap()
     }
 }

@@ -8,8 +8,10 @@
 import UIKit
 
 protocol MainCollectionViewManagerDelegate: AnyObject {
-    func didSelectItem(at type: NewTrackerSectionType.Details)
+    func didSelectItem(at type: NewTrackerSection, indexPath: IndexPath)
     func updateEnteredText(newText: String)
+    func updateSelectedEmoji(emoji: String)
+    func updateSelectedColor(color: UIColor)
 }
 
 protocol MainCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource {
@@ -23,11 +25,12 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
     private let trackersDataProvider: TrackersDataProvider
     private let collectionView: UICollectionView
     private let maxNumberOfCharacters = 38
-    private var sections: [NewTrackerSectionType]
+    private var sections: [NewTrackerSection]
+    private var selectedIndexPathsBySection: [Int: IndexPath] = [:]
     
     weak var delegate: MainCollectionViewManagerDelegate?
     
-    init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView, sections: [NewTrackerSectionType]) {
+    init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView, sections: [NewTrackerSection]) {
         self.trackersDataProvider = trackersDataProvider
         self.collectionView = collectionView
         self.sections = sections
@@ -43,15 +46,28 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
     func createLayout() -> UICollectionViewCompositionalLayout {
         let layout = UICollectionViewCompositionalLayout { [weak self] sectionIndex, _ in
             guard let self, let sectionType = sections[safe: sectionIndex] else { return nil }
-            var section: NSCollectionLayoutSection
             
+            var section: NSCollectionLayoutSection = makeEmptySection()
             switch sectionType {
-            case .titleTextField:
+            case is TextFieldSection:
                 section = makeTitleTextFieldSection()
-            case .details:
+                
+            case is DetailsSection:
                 section = makeCategoryAndScheduleSection()
+                
+            case is EmojiSection:
+                let headerItem = makeHeader()
+                section = makeEmojiAndColorSection()
+                section.boundarySupplementaryItems = [headerItem]
+                
+            case is ColorsSection:
+                let headerItem = makeHeader()
+                section = makeEmojiAndColorSection()
+                section.boundarySupplementaryItems = [headerItem]
+                
+            default:
+                break
             }
-            
             return section
         }
         let config = UICollectionViewCompositionalLayoutConfiguration()
@@ -63,47 +79,55 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
     }
     
     func updateSelectedWeekday(with text: String?) {
-        guard let sectionIndex = sections.firstIndex(where: {
-            if case .details = $0 { return true }
+        guard let sectionIndex = sections.firstIndex(where: { $0 is DetailsSection }),
+              var detailsSection = sections[sectionIndex] as? DetailsSection
+        else { return }
+        
+        guard let itemIndex = detailsSection.models.firstIndex(where: {
+            if case .schedule = $0 { return true }
             return false
         }) else { return }
         
-        if case .details(let details) = sections[sectionIndex] {
-            let updatedDetails = details.map { detail -> NewTrackerSectionType.Details in
-                switch detail {
-                case .schedule:
-                    return .schedule(subtitle: text)
-                default:
-                    return detail
-                }
-            }
-            
-            sections[sectionIndex] = .details(updatedDetails)
-            
-            if let itemIndex = updatedDetails.firstIndex(where: {
-                if case .schedule = $0 { return true }
-                return false
-            }) {
-                let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
-                collectionView.reloadItems(at: [indexPath])
-            }
-        }
+        detailsSection.models[itemIndex] = .schedule(subtitle: text)
+
+        sections[sectionIndex] = detailsSection
+        
+        let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
+        collectionView.reloadItems(at: [indexPath])
     }
 }
 
 extension MainCollectionViewManager {
+    func collectionView(_ collectionView: UICollectionView,
+                        viewForSupplementaryElementOfKind kind: String,
+                        at indexPath: IndexPath) -> UICollectionReusableView {
+        
+        if kind == UICollectionView.elementKindSectionHeader {
+            guard let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: SimpleTitleHeaderView.reuseID,
+                for: indexPath
+            ) as? SimpleTitleHeaderView else { return UICollectionReusableView() }
+            let sectionType = sections[indexPath.section]
+            
+            header.configure(title: sectionType.sectionTitle ?? "")
+            return header
+        }
+        return UICollectionReusableView()
+    }
+    
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         sections.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        sections[section].numberOfItemsInSection
+        sections[section].numberOfItems
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let sectionType = sections[indexPath.section]
         switch sectionType {
-        case .titleTextField:
+        case is TextFieldSection:
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TitleTextFieldCell.reuseID,
                 for: indexPath
@@ -122,9 +146,10 @@ extension MainCollectionViewManager {
                 self?.delegate?.updateEnteredText(newText: text)
             }
             return cell
-        case let .details(subsections):
-            let subsection = subsections[indexPath.item]
-
+            
+        case let sectionType as DetailsSection:
+            let subsection = sectionType.models[indexPath.item]
+            
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: DetailsCell.reuseID,
                 for: indexPath
@@ -133,27 +158,76 @@ extension MainCollectionViewManager {
             }
             
             cell.configure(title: subsection.title, subtitle: subsection.subtitle, accessory: .chevron)
-            let isLastRow = indexPath.row == sections[indexPath.section].numberOfItemsInSection - 1
+            let isLastRow = indexPath.row == sections[indexPath.section].numberOfItems - 1
             cell.setSeparatorHidden(isLastRow)
-            
             return cell
+            
+        case let sectionType as EmojiSection:
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: EmojiCell.reuseID,
+                for: indexPath
+            ) as? EmojiCell else {
+                return UICollectionViewCell()
+            }
+            
+            let subitem = sectionType.models[indexPath.item]
+            cell.configure(emoji: subitem.emoji)
+            return cell
+         
+        case let sectionType as ColorsSection:
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: ColorCell.reuseID,
+                for: indexPath
+            ) as? ColorCell else {
+                return UICollectionViewCell()
+            }
+            
+            let subitem = sectionType.models[indexPath.item]
+            cell.configure(color: subitem.color)
+            return cell
+            
+        default:
+            return UICollectionViewCell()
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let sectionType = sections[indexPath.section]
+        let oldIndexPath = selectedIndexPathsBySection[indexPath.section]
         
+        selectedIndexPathsBySection[indexPath.section] = indexPath
+        updateSelected(oldIndexPath: oldIndexPath, newIndexPath: indexPath)
+
         switch sectionType {
-        case .details(let subsections):
-            let subsection = subsections[indexPath.item]
-            delegate?.didSelectItem(at: subsection)
+        case let emojiSection as EmojiSection:
+            let subitem = emojiSection.models[indexPath.item]
+            delegate?.updateSelectedEmoji(emoji: subitem.emoji)
+            
+        case let colorsSection as ColorsSection:
+            let subitem = colorsSection.models[indexPath.item]
+            delegate?.updateSelectedColor(color: subitem.color)
+            
         default:
-            break
+            delegate?.didSelectItem(at: sectionType, indexPath: indexPath)
         }
     }
 }
 
 private extension MainCollectionViewManager {
+    func makeHeader() -> NSCollectionLayoutBoundarySupplementaryItem {
+        let headerSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1),
+            heightDimension: .absolute(54.dvs)
+        )
+        let headerItem = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: headerSize,
+            elementKind: UICollectionView.elementKindSectionHeader,
+            alignment: .top
+        )
+        
+        return headerItem
+    }
+    
     func makeTitleTextFieldSection() -> NSCollectionLayoutSection {
         let item = NSCollectionLayoutItem(
             layoutSize: NSCollectionLayoutSize(
@@ -200,5 +274,59 @@ private extension MainCollectionViewManager {
         section.decorationItems = [backgroundItem]
         
         return section
+    }
+    
+    func makeEmojiAndColorSection() -> NSCollectionLayoutSection {
+        let item = NSCollectionLayoutItem(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .absolute(52.dvs),
+                heightDimension: .absolute(52.dvs)
+            )
+        )
+        
+        let group = NSCollectionLayoutGroup.horizontal(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1),
+                heightDimension: .absolute(52.dvs)
+            ),
+            subitems: [item]
+        )
+        group.interItemSpacing = .fixed(5)
+        
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 5
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 18.dhs, bottom: 0, trailing: 18.dhs)
+        
+        return section
+    }
+        
+    func makeEmptySection() -> NSCollectionLayoutSection {
+        let fallbackItemSize = NSCollectionLayoutSize(
+            widthDimension: .absolute(1),
+            heightDimension: .absolute(1)
+        )
+        let fallbackItem = NSCollectionLayoutItem(layoutSize: fallbackItemSize)
+        
+        let group = NSCollectionLayoutGroup.horizontal(
+            layoutSize: fallbackItemSize,
+            subitems: [fallbackItem]
+        )
+        
+        return NSCollectionLayoutSection(group: group)
+    }
+    
+    func updateSelected(oldIndexPath: IndexPath?, newIndexPath: IndexPath?) {
+        
+        func setupBorder(for indexPath: IndexPath?, isNeeded: Bool) {
+            guard let indexPath,
+                  let cell = collectionView.cellForItem(at: indexPath) as? SelectableCellProtocol else { return
+            }
+            cell.changeSelectedState(isSelected: isNeeded)
+        }
+        
+        guard oldIndexPath != newIndexPath else { return }
+        
+        setupBorder(for: oldIndexPath, isNeeded: false)
+        setupBorder(for: newIndexPath, isNeeded: true)
     }
 }
