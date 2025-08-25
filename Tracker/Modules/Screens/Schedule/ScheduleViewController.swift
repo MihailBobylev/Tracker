@@ -9,9 +9,14 @@ import UIKit
 import SnapKit
 
 final class ScheduleViewController: UIViewController {
+    private struct Constants {
+        static var titleText = "Расписание"
+        static var doneButtonText = "Готово"
+    }
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Расписание"
+        label.text = Constants.titleText
         label.font = UIFont.systemFont(ofSize: 16.dfs, weight: .medium)
         label.textAlignment = .center
         return label
@@ -30,7 +35,7 @@ final class ScheduleViewController: UIViewController {
     
     private lazy var doneButton: TrackerCustomButton = {
         let button = TrackerCustomButton(style: .primary)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(Constants.doneButtonText, for: .normal)
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         return button
     }()

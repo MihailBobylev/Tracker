@@ -20,7 +20,6 @@ protocol ScheduleViewModelProtocol {
 }
 
 final class ScheduleViewModel: ScheduleViewModelProtocol {
-    private let coordinator: NewTrackerCoordinator
     private var scheduleService: ScheduleService
     private var selectedWeekdays: Set<WeekdayType>
     
@@ -28,10 +27,9 @@ final class ScheduleViewModel: ScheduleViewModelProtocol {
     
     var onDaysSelected: ((Set<WeekdayType>) -> Void)?
     
-    init(scheduleService: ScheduleService, selectedWeekdays: Set<WeekdayType>, coordinator: NewTrackerCoordinator) {
+    init(scheduleService: ScheduleService, selectedWeekdays: Set<WeekdayType>) {
         self.scheduleService = scheduleService
         self.selectedWeekdays = selectedWeekdays
-        self.coordinator = coordinator
     }
     
     func getSections() -> [WeekdayType] {

@@ -9,9 +9,15 @@ import UIKit
 import SnapKit
 
 final class NewTrackerViewController: UIViewController {
+    private struct Constants {
+        static var titleText = "Новая привычка"
+        static var cancelButtonText = "Отменить"
+        static var doneButtonText = "Создать"
+    }
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая привычка"
+        label.text = Constants.titleText
         label.font = UIFont.systemFont(ofSize: 16.dfs, weight: .medium)
         label.textAlignment = .center
         return label
@@ -45,14 +51,14 @@ final class NewTrackerViewController: UIViewController {
     
     private lazy var cancelButton: TrackerCustomButton = {
         let button = TrackerCustomButton(style: .outline)
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(Constants.cancelButtonText, for: .normal)
         button.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         return button
     }()
     
     private lazy var doneButton: TrackerCustomButton = {
         let button = TrackerCustomButton(style: .primary)
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(Constants.doneButtonText, for: .normal)
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         button.isEnabled = false
         return button

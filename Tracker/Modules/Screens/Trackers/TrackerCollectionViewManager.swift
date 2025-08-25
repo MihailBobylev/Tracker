@@ -121,7 +121,7 @@ extension TrackerCollectionViewManager {
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return trackersDataProvider.trackerStore.fetchedResultsController?.sections?[section].numberOfObjects ?? 0
+        trackersDataProvider.trackerStore.fetchedResultsController?.sections?[section].numberOfObjects ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {

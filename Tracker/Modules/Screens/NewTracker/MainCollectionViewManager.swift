@@ -19,6 +19,7 @@ protocol MainCollectionViewManagerProtocol: UICollectionViewDelegate, UICollecti
     func createLayout() -> UICollectionViewCompositionalLayout
     func setupCollectionView()
     func updateSelectedWeekday(with text: String?)
+    func updateSelectedCategory(with text: String?)
 }
 
 final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtocol {
@@ -76,6 +77,24 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
         layout.register(DetailsBackgroundDecorationView.self, forDecorationViewOfKind: DetailsBackgroundDecorationView.identifier)
         
         return layout
+    }
+    
+    func updateSelectedCategory(with text: String?) {
+        guard let sectionIndex = sections.firstIndex(where: { $0 is DetailsSection }),
+              var detailsSection = sections[sectionIndex] as? DetailsSection
+        else { return }
+        
+        guard let itemIndex = detailsSection.models.firstIndex(where: {
+            if case .category = $0 { return true }
+            return false
+        }) else { return }
+        
+        detailsSection.models[itemIndex] = .category(subtitle: text)
+        
+        sections[sectionIndex] = detailsSection
+        
+        let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
+        collectionView.reloadItems(at: [indexPath])
     }
     
     func updateSelectedWeekday(with text: String?) {
@@ -319,8 +338,7 @@ private extension MainCollectionViewManager {
         
         func setupBorder(for indexPath: IndexPath?, isNeeded: Bool) {
             guard let indexPath,
-                  let cell = collectionView.cellForItem(at: indexPath) as? SelectableCellProtocol else { return
-            }
+                  let cell = collectionView.cellForItem(at: indexPath) as? SelectableCellProtocol else { return }
             cell.changeSelectedState(isSelected: isNeeded)
         }
         

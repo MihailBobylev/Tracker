@@ -9,9 +9,15 @@ import UIKit
 import SnapKit
 
 final class OnboardingViewController: UIPageViewController {
+    private struct Constants {
+        static var firstPageText = "Отслеживайте только то, что хотите"
+        static var secondPageText = "Даже если это не литры воды и йога"
+        static var doneButtonText = "Вот это технологии!"
+    }
+    
     private lazy var pages: [UIViewController] = {
-        let firstPage = OnboardingBackgroundViewController(backImage: .background1, text: "Отслеживайте только то, что хотите")
-        let secondPage = OnboardingBackgroundViewController(backImage: .background2, text: "Даже если это не литры воды и йога")
+        let firstPage = OnboardingBackgroundViewController(backImage: .background1, text: Constants.firstPageText)
+        let secondPage = OnboardingBackgroundViewController(backImage: .background2, text: Constants.secondPageText)
         return [firstPage, secondPage]
     }()
     
@@ -26,7 +32,7 @@ final class OnboardingViewController: UIPageViewController {
 
     private lazy var doneButton: TrackerCustomButton = {
         let button = TrackerCustomButton(style: .primary)
-        button.setTitle("Вот это технологии!", for: .normal)
+        button.setTitle(Constants.doneButtonText, for: .normal)
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
         return button
     }()
