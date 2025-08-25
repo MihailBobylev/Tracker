@@ -71,17 +71,21 @@ private extension NewTrackerCoordinator {
     }
     
     func createCategoriesController(selectedCategory: TrackerCategory?) -> UIViewController {
-        let viewModel = CategoriesViewModel(selectedCategory: selectedCategory,
-                                            categoriesDataProvider: categoriesDataProvider)
+        let viewModel = CategoriesViewModel(
+            selectedCategory: selectedCategory,
+            categoriesDataProvider: categoriesDataProvider
+        )
         categoriesViewModel = viewModel
+        
         let viewController = CategoriesViewController(viewModel: viewModel)
+        
         viewModel.categorySelected = { [weak self] category in
-            guard let self else { return }
-            newTrackerViewModel?.updateSelectedCategory(category: category)
+            self?.newTrackerViewModel?.updateSelectedCategory(category: category)
         }
-        viewModel.didTapAddNewCategory = { [weak viewController] in
-            guard let viewController else { return }
-            viewController.present(self.createAddNewCategoryController(), animated: true)
+        
+        viewModel.didTapAddNewCategory = { [weak self, weak viewController] in
+            guard let viewController, let addCategoryVC = self?.createAddNewCategoryController() else { return }
+            viewController.present(addCategoryVC, animated: true)
         }
         
         return viewController
@@ -90,8 +94,7 @@ private extension NewTrackerCoordinator {
     func createAddNewCategoryController() -> UIViewController {
         let viewController = NewCategoryViewController()
         viewController.didTapAddNewCategory = { [weak self] name in
-            guard let self else { return }
-            categoriesViewModel?.addNewCategory(name: name)
+            self?.categoriesViewModel?.addNewCategory(name: name)
         }
         return viewController
     }

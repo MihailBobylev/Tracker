@@ -6,6 +6,7 @@
 //
 
 import Foundation
+
 final class UserDefaultsManager {
     private enum Keys: String {
         case appWasShown
