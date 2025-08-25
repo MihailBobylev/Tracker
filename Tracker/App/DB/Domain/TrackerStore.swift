@@ -53,6 +53,7 @@ final class TrackerStore: NSObject {
             let request = TrackerCoreData.fetchRequest()
             request.predicate = predicate
             request.sortDescriptors = [
+                NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
                 NSSortDescriptor(keyPath: \TrackerCoreData.title, ascending: true)
             ]
             
@@ -80,21 +81,17 @@ final class TrackerStore: NSObject {
         trackerCoreData.title = tracker.title
         trackerCoreData.emoji = tracker.emoji
         trackerCoreData.color = tracker.color.hexString
-        trackerCoreData.schedule = tracker.schedule
-            .map { $0.mask }
-            .joined()
+        trackerCoreData.schedule = tracker.schedule.map { $0.mask }.joined()
 
         let fetchRequest = TrackerCategoryCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCoreData.title), categoryTitle)
+        fetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
         fetchRequest.fetchLimit = 1
 
-        if let category = try context.fetch(fetchRequest).first {
-            trackerCoreData.category = category
-        } else {
-            let newCategory = TrackerCategoryCoreData(context: context)
-            newCategory.title = categoryTitle
-            trackerCoreData.category = newCategory
+        guard let category = try context.fetch(fetchRequest).first else {
+            throw NSError(domain: "AddTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Category \(categoryTitle) not found"])
         }
+
+        trackerCoreData.category = category
 
         do {
             try context.save()

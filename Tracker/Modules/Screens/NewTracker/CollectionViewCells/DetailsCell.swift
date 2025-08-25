@@ -44,8 +44,8 @@ final class DetailsCell: UICollectionViewCell {
         return label
     }()
     
-    private let arrowImageView: UIImageView = {
-        let imageView = UIImageView(image: UIImage(resource: .icArrowRightGray))
+    private let accessoryImageView: UIImageView = {
+        let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.isHidden = true
         return imageView
@@ -73,7 +73,8 @@ final class DetailsCell: UICollectionViewCell {
         
         mainHStack.removeFromSuperview()
         accessorySwitch.isHidden = true
-        arrowImageView.isHidden = true
+        accessoryImageView.image = nil
+        accessoryImageView.isHidden = true
         subtitleLabel.isHidden = true
     }
     
@@ -88,6 +89,10 @@ final class DetailsCell: UICollectionViewCell {
     func setSeparatorHidden(_ hidden: Bool) {
         separatorView.isHidden = hidden
     }
+    
+    func changeSelectedState(to isSelected: Bool) {
+        accessoryImageView.isHidden = !isSelected
+    }
 }
 
 private extension DetailsCell {
@@ -100,10 +105,17 @@ private extension DetailsCell {
         
         switch accessory {
         case .chevron:
-            arrowImageView.isHidden = false
+            accessoryImageView.image = accessory.image
+            accessoryImageView.isHidden = false
+        case .checkmark(let isSelected):
+            accessoryImageView.image = accessory.image
+            accessoryImageView.isHidden = !isSelected
         case .switcher(let isOn):
             accessorySwitch.isOn = isOn
             accessorySwitch.isHidden = false
+        case .none:
+            accessoryImageView.isHidden = true
+            accessorySwitch.isHidden = true
         }
     }
     
@@ -121,13 +133,15 @@ private extension DetailsCell {
         }
         
         switch accessory {
-        case .chevron:
-            mainHStack.addArrangedSubview(arrowImageView)
-            arrowImageView.snp.makeConstraints { make in
+        case .chevron, .checkmark:
+            mainHStack.addArrangedSubview(accessoryImageView)
+            accessoryImageView.snp.makeConstraints { make in
                 make.width.height.equalTo(24.dhs)
             }
         case .switcher:
             mainHStack.addArrangedSubview(accessorySwitch)
+        case .none:
+            break
         }
 
         separatorView.snp.makeConstraints { make in

@@ -9,9 +9,15 @@ import UIKit
 import SnapKit
 
 final class TrackersViewController: UIViewController {
+    private struct Constants {
+        static var titleText = "Трекеры"
+        static var textFieldPlaceholderText = "Поиск"
+        static var emptyStateLabelText = "Что будем отслеживать?"
+    }
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Трекеры"
+        label.text = Constants.titleText
         label.font = UIFont.systemFont(ofSize: 34.dfs, weight: .bold)
         label.textAlignment = .left
         return label
@@ -28,7 +34,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var searchTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Поиск"
+        tf.placeholder = Constants.textFieldPlaceholderText
         tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         tf.backgroundColor = UIColor(resource: .grayPaleSky)
         tf.layer.cornerRadius = 10
@@ -70,7 +76,7 @@ final class TrackersViewController: UIViewController {
     
     private let emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Что будем отслеживать?"
+        label.text = Constants.emptyStateLabelText
         label.numberOfLines = 1
         label.font = UIFont.systemFont(ofSize: 12.dfs, weight: .medium)
         return label

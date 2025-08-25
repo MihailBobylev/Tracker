@@ -8,10 +8,8 @@
 import UIKit
 
 final class AppCoordinator: Coordinator {
-    
     var navigationController: UINavigationController
     var window: UIWindow?
-    var deepLink: String?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -19,7 +17,20 @@ final class AppCoordinator: Coordinator {
     
     func start() {
         window?.rootViewController = navigationController
+        guard UserDefaultsManager.appWasShown else {
+            starOnboardingFlow()
+            return
+        }
         startMainFlow()
+    }
+    
+    func starOnboardingFlow() {
+        let onboardingViewController = OnboardingViewController()
+        onboardingViewController.didTapDone = { [weak self] in
+            guard let self else { return }
+            startMainFlow()
+        }
+        window?.rootViewController = onboardingViewController
     }
     
     func startMainFlow() {

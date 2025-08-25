@@ -10,6 +10,7 @@ import UIKit
 final class TrackersCoordinator: TabBarPresentableCoordinator {
     private var trackerViewModel: TrackersViewModel?
     private let trackersDataProvider = TrackersDataProvider()
+    private let categoriesDataProvider = CategoriesDataProvider()
     
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icTrackerSelected)
@@ -35,7 +36,8 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
     func createAddNewTrackerController() {
         let newTrackerCoordinator = NewTrackerCoordinator(
             navigationController: navigationController,
-            trackersDataProvider: trackersDataProvider
+            trackersDataProvider: trackersDataProvider,
+            categoriesDataProvider: categoriesDataProvider
         )
         newTrackerCoordinator.onFinishCreatingTracker = { [weak self] newTracker, categotyTitle in
             self?.trackerViewModel?.addNewTracker(newTracker, to: categotyTitle)

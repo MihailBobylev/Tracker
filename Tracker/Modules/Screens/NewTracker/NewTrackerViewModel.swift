@@ -15,6 +15,7 @@ protocol NewTrackerViewModelProtocol {
     var delegate: NewTrackerViewModelDelegate? { get set }
     func getSections() -> [NewTrackerSection]
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
+    func updateSelectedCategory(category: TrackerCategory?)
     func updateSelectedWeekdays(_ days: Set<WeekdayType>)
     func doneButtonTapped()
 }
@@ -29,6 +30,14 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
             updateButtonState()
         }
     }
+    
+    private var selectedCategory: TrackerCategory? {
+        didSet {
+            updateSelectedCategoryInfo(with: selectedCategory?.title)
+            updateButtonState()
+        }
+    }
+    
     private var selectedWeekdays: Set<WeekdayType> = [] {
         didSet {
             updateScheduleInfo(with: selectedWeekdays.labelText)
@@ -72,12 +81,12 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     }
 
     func doneButtonTapped() {
-        guard let color = trackerColor else { return }
+        guard let selectedCategory, let color = trackerColor else { return }
         let createdTracker = Tracker(title: trackerTitle,
                                      color: color,
                                      emoji: trackerEmoji,
                                      schedule: selectedWeekdays)
-        coordinator.didFinishCreatingNewTracker(createdTracker, categoryTitle: "Домашний уют")
+        coordinator.didFinishCreatingNewTracker(createdTracker, categoryTitle: selectedCategory.title)
     }
 }
 
@@ -88,7 +97,7 @@ extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
             let subItem = type.models[indexPath.item]
             switch subItem {
             case .category:
-                break
+                coordinator.goToCategory(selectedCategory: selectedCategory)
             case .schedule:
                 coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
             }
@@ -101,6 +110,10 @@ extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
         trackerTitle = newText
     }
     
+    func updateSelectedCategory(category: TrackerCategory?) {
+        selectedCategory = category
+    }
+    
     func updateSelectedEmoji(emoji: String) {
         trackerEmoji = emoji
     }
@@ -111,12 +124,20 @@ extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
 }
 
 private extension NewTrackerViewModel {
+    func updateSelectedCategoryInfo(with text: String?) {
+        mainCollectionViewManager?.updateSelectedCategory(with: text)
+    }
+    
     func updateScheduleInfo(with text: String?) {
         mainCollectionViewManager?.updateSelectedWeekday(with: text)
     }
     
     func updateButtonState() {
-        let isEnabled = !trackerTitle.isEmpty && !selectedWeekdays.isEmpty && !trackerEmoji.isEmpty && trackerColor != nil
+        let isEnabled = !trackerTitle.isEmpty
+        && selectedCategory != nil
+        && !selectedWeekdays.isEmpty
+        && !trackerEmoji.isEmpty
+        && trackerColor != nil
         delegate?.changeButtonState(to: isEnabled)
     }
 }
