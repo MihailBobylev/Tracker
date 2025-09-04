@@ -36,7 +36,8 @@ final class NewTrackerService {
     private var emojiSection: NewTrackerSection {
         let emojis = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝", "😪"]
         let models = emojis.map { EmojiSection.Emoji(emoji: $0) }
-        return EmojiSection(sectionType: .emoji, sectionTitle: "Emoji", models: models)
+        return EmojiSection(sectionType: .emoji, sectionTitle: NSLocalizedString("emoji", comment: "emoji title text"),
+                            models: models)
     }
     
     private var colorSection: NewTrackerSection {
@@ -46,7 +47,7 @@ final class NewTrackerService {
             .section13, .section14, .section15, .section16, .section17, .section18
         ]
         let models = colors.map { ColorsSection.CustomColor(color: $0) }
-        return ColorsSection(sectionType: .customColor, sectionTitle: "Цвет", models: models)
+        return ColorsSection(sectionType: .customColor, sectionTitle: NSLocalizedString("color", comment: "color title text"),
+                             models: models)
     }
 }
-

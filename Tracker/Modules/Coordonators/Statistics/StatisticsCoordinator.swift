@@ -11,7 +11,7 @@ final class StatisticsCoordinator: TabBarPresentableCoordinator {
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icStatisticsSelected)
         let unselected = UIImage(resource: .icStatisticsUnselected)
-        let title = "Статистика"
+        let title = NSLocalizedString("statistics", comment: "title text")
         let item = UITabBarItem(title: title, image: unselected, selectedImage: icon)
         return item
     }()

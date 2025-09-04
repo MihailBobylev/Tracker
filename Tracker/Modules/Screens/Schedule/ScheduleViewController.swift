@@ -10,8 +10,8 @@ import SnapKit
 
 final class ScheduleViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Расписание"
-        static var doneButtonText = "Готово"
+        static var titleText = NSLocalizedString("schedule", comment: "Text displayed on title")
+        static var doneButtonText = NSLocalizedString("done", comment: "Text displayed on done button")
     }
     
     private let titleLabel: UILabel = {

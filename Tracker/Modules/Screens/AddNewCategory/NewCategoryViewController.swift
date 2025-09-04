@@ -10,9 +10,9 @@ import SnapKit
 
 final class NewCategoryViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Новая категория"
-        static var textFieldPlaceholderText = "Введите название категории"
-        static var buttonText = "Готово"
+        static var titleText = NSLocalizedString("new_category", comment: "title text")
+        static var textFieldPlaceholderText = NSLocalizedString("enter_the_category_name", comment: "placeholder text")
+        static var buttonText = NSLocalizedString("done", comment: "done button text")
         static var maxTextLength = 38
     }
     

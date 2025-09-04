@@ -10,9 +10,9 @@ import SnapKit
 
 final class NewTrackerViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Новая привычка"
-        static var cancelButtonText = "Отменить"
-        static var doneButtonText = "Создать"
+        static var titleText = NSLocalizedString("new_habit", comment: "title text")
+        static var cancelButtonText = NSLocalizedString("cancel", comment: "cancel button text")
+        static var doneButtonText = NSLocalizedString("create", comment: "create button text")
     }
     
     private let titleLabel: UILabel = {

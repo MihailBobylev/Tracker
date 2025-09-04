@@ -14,7 +14,7 @@ extension Set where Element == WeekdayType {
         let allDays = Set(WeekdayType.allCases)
         
         if self == allDays {
-            return "Каждый день"
+            return NSLocalizedString("every_day", comment: "label text")
         }
         
         let orderedDays = WeekdayType.allCases

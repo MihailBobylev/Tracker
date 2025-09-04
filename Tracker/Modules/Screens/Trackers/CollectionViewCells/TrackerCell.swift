@@ -92,7 +92,11 @@ final class TrackerCell: UICollectionViewCell {
         plusButton.tintColor = tracker.color
         emojiLabel.text = tracker.emoji
         taskLabel.text = tracker.title
-        daysLabel.text = "\(days) " + days.daySuffix()
+        let tasksString = String.localizedStringWithFormat(
+            NSLocalizedString("numberOfDays", comment: "Number of completed tasks"),
+            days
+        )
+        daysLabel.text = tasksString
     }
     
     func setCompleted(isCompleted: Bool) {

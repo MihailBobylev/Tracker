@@ -42,9 +42,9 @@ struct DetailsSection: NewTrackerSection {
         var title: String {
             switch self {
             case .category:
-                return "Категория"
+                return NSLocalizedString("category", comment: "category section title text")
             case .schedule:
-                return "Расписание"
+                return NSLocalizedString("schedule", comment: "schedule section title text")
             }
         }
         

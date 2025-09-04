@@ -1,0 +1,48 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by Михаил Бобылев on 04.09.2025.
+  
+*/
+
+"locale" = "en_EN";
+"trackers" = "Trackers";
+"search" = "Search";
+"what_are_we_going_to_track" = "What are we going to track?";
+"done" = "Done";
+"monday" = "Monday";
+"tuesday" = "Tuesday";
+"wednesday" = "Wednesday";
+"thursday" = "Thursday";
+"friday" = "Friday";
+"saturday" = "Saturday";
+"sunday" = "Sunday";
+
+"monday_short" = "Mon";
+"tuesday_short" = "Tue";
+"wednesday_short" = "Wed";
+"thursday_short" = "Thu";
+"friday_short" = "Fri";
+"saturday_short" = "Sat";
+"sunday_short" = "Sun";
+
+"track_only_what_you_want" = "Track only what you want";
+"liters_of_water_and_yoga" = "Even if it's not liters of water and yoga";
+"these_are_the_technologies" = "These are technologies!";
+
+"new_habit" = "New habit";
+"cancel" = "Cancel";
+"create" = "Create";
+"emoji" = "Emoji";
+"color" = "Color";
+"category" = "Category";
+"schedule" = "Schedule";
+"enter_the_name_of_the_tracker" = "Enter the name of the tracker";
+"the_limit_is_N_characters" = "%d characters limit";
+"add_a_category" = "Add category";
+"habits_and_events_can_be_combined" = "Habits and events can be \ncombined in meaning";
+"new_category" = "New category";
+"enter_the_category_name" = "Enter the name of the category";
+"statistics" = "Statistics";
+"every_day" = "Every day";

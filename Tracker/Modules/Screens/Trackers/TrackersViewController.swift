@@ -10,9 +10,10 @@ import SnapKit
 
 final class TrackersViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Трекеры"
-        static var textFieldPlaceholderText = "Поиск"
-        static var emptyStateLabelText = "Что будем отслеживать?"
+        static var titleText = NSLocalizedString("trackers", comment: "Text displayed on title")
+        static var textFieldPlaceholderText = NSLocalizedString("search", comment: "Text displayed on search field")
+        static var emptyStateLabelText = NSLocalizedString("what_are_we_going_to_track", comment: "Text displayed on empty state label")
+        static var locale = NSLocalizedString("locale", comment: "locale")
     }
     
     private let titleLabel: UILabel = {
@@ -27,7 +28,7 @@ final class TrackersViewController: UIViewController {
         let datePicker = UIDatePicker()
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
-        datePicker.locale = Locale(identifier: "ru_RU")
+        datePicker.locale = Locale(identifier: Constants.locale)
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
     }()

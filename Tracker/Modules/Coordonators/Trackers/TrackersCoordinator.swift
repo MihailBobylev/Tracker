@@ -15,7 +15,7 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icTrackerSelected)
         let unselected = UIImage(resource: .icTrackerUnselected)
-        let title = "Трекеры"
+        let title = NSLocalizedString("trackers", comment: "Text displayed on title")
         let item = UITabBarItem(title: title, image: unselected, selectedImage: icon)
         return item
     }()
