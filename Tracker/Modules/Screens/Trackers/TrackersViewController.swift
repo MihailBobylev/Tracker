@@ -33,17 +33,9 @@ final class TrackersViewController: UIViewController {
         return datePicker
     }()
     
-    private lazy var searchTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = Constants.textFieldPlaceholderText
-        tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
-        tf.backgroundColor = UIColor(resource: .grayPaleSky)
-        tf.layer.cornerRadius = 10
-        tf.clearButtonMode = .whileEditing
-        tf.autocorrectionType = .no
-        tf.leftView = setupTextFieldLeftView()
-        tf.leftViewMode = .always
-        return tf
+    private let searchHeaderView: SearchHeaderView = {
+        let view = SearchHeaderView()
+        return view
     }()
     
     private let mainCollectionView: UICollectionView = {
@@ -98,6 +90,7 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavBar()
+        setupActions()
         setupUI()
         viewModel.configureTrackerCollectionViewManager(with: mainCollectionView)
         viewModel.selectedDate = datePicker.date
@@ -106,9 +99,17 @@ final class TrackersViewController: UIViewController {
 }
 
 extension TrackersViewController: TrackersViewModelDelegate {
-    func updateEmptyState(to isShow: Bool) {
-        emptyStateVStack.isHidden = !isShow
-        mainCollectionView.isHidden = isShow
+    func updateEmptyState(to type: EmptyStateType) {
+        switch type {
+        case .empty, .notFound:
+            emptyStateImageView.image = type.image
+            emptyStateLabel.text = type.text
+            emptyStateVStack.isHidden = false
+            mainCollectionView.isHidden = true
+        case .none:
+            emptyStateVStack.isHidden = true
+            mainCollectionView.isHidden = false
+        }
     }
 }
 
@@ -123,11 +124,17 @@ private extension TrackersViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
     }
     
+    func setupActions() {
+        searchHeaderView.onTextChanged = { [weak self] text in
+            self?.viewModel.searchedText = text
+        }
+    }
+    
     func setupUI() {
         view.backgroundColor = .white
         view.addSubview(titleLabel)
+        view.addSubview(searchHeaderView)
         view.addSubview(mainCollectionView)
-        view.addSubview(searchTextField)
         view.addSubview(emptyStateVStack)
         emptyStateVStack.addArrangedSubview(emptyStateImageView)
         emptyStateVStack.addArrangedSubview(emptyStateLabel)
@@ -137,14 +144,14 @@ private extension TrackersViewController {
             make.leading.trailing.equalToSuperview().inset(16.dhs)
         }
         
-        searchTextField.snp.makeConstraints { make in
+        searchHeaderView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(7.dvs)
             make.leading.trailing.equalToSuperview().inset(16.dhs)
             make.height.equalTo(36.dhs)
         }
         
         mainCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchTextField.snp.bottom).offset(10.dhs)
+            make.top.equalTo(searchHeaderView.snp.bottom).offset(10.dhs)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(-10.dvs)
         }

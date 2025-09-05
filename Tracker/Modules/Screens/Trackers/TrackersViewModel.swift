@@ -8,11 +8,12 @@
 import UIKit
 
 protocol TrackersViewModelDelegate: AnyObject {
-    func updateEmptyState(to isShow: Bool)
+    func updateEmptyState(to type: EmptyStateType)
 }
 
 protocol TrackersViewModelProtocol {
     var selectedDate: Date { get set }
+    var searchedText: String { get set }
     var delegate: TrackersViewModelDelegate? { get set }
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func goToAddNewTrackerScreen()
@@ -29,7 +30,13 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     var selectedDate = Date() {
         didSet {
             updateDate(newDate: selectedDate)
-            updateTrackers(for: selectedDate)
+            updateTrackers(for: selectedDate, text: searchedText)
+        }
+    }
+    
+    var searchedText: String = "" {
+        didSet {
+            updateTrackers(for: selectedDate, text: searchedText)
         }
     }
     weak var delegate: TrackersViewModelDelegate?
@@ -54,7 +61,7 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
         trackersDataProvider.addNewTracker(tracker, to: categoryTitle)
-        updateTrackers(for: selectedDate)
+        updateTrackers(for: selectedDate, text: searchedText)
     }
 }
 
@@ -72,7 +79,6 @@ extension TrackersViewModel: TrackerCollectionViewManagerProtocolDelegate {
 extension TrackersViewModel: TrackersDataProviderDelegate {
     func updateCollection(didUpdate update: TrackerStoreUpdate?) {
         trackerCollectionViewManager?.updateCollectionView(didUpdate: update)
-        delegate?.updateEmptyState(to: trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true)
     }
 }
 
@@ -81,8 +87,15 @@ private extension TrackersViewModel {
         trackerCollectionViewManager?.updateDate(newDate: newDate)
     }
     
-    func updateTrackers(for date: Date) {
-        trackersDataProvider.trackers(for: date)
-        delegate?.updateEmptyState(to: trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true)
+    func updateTrackers(for date: Date, text: String) {
+        trackersDataProvider.trackers(for: date, searchText: text)
+        let fetchedSectionsIsEmpty = trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true
+        if fetchedSectionsIsEmpty && text.isEmpty {
+            delegate?.updateEmptyState(to: .empty)
+        } else if fetchedSectionsIsEmpty && !text.isEmpty {
+            delegate?.updateEmptyState(to: .notFound)
+        } else {
+            delegate?.updateEmptyState(to: .none)
+        }
     }
 }

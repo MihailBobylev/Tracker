@@ -23,11 +23,11 @@ final class TrackersDataProvider {
     
     weak var delegate: TrackersDataProviderDelegate?
     
-    func trackers(for date: Date) {
+    func trackers(for date: Date, searchText: String?) {
         guard let weekday = calendar.weekdayType(from: date) else {
             return
         }
-        trackerStore.reconfigureFetchedResultsController(for: weekday)
+        trackerStore.reconfigureFetchedResultsController(for: weekday, searchText: searchText)
     }
 
     func tracker(from coreData: TrackerCoreData) -> Tracker? {

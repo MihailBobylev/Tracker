@@ -38,10 +38,20 @@ final class TrackerStore: NSObject {
         super.init()
     }
     
-    func reconfigureFetchedResultsController(for weekday: WeekdayType) {
-        let predicate = NSPredicate(format: "%K CONTAINS %@", #keyPath(TrackerCoreData.schedule), weekday.mask)
+    func reconfigureFetchedResultsController(for weekday: WeekdayType, searchText: String?) {
+        var predicates: [NSPredicate] = [
+            NSPredicate(format: "%K CONTAINS %@", #keyPath(TrackerCoreData.schedule), weekday.mask)
+        ]
+        
+        if let text = searchText, !text.isEmpty {
+            let titlePredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(TrackerCoreData.title), text)
+            predicates.append(titlePredicate)
+        }
+        
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        
         if let frc = fetchedResultsController {
-            frc.fetchRequest.predicate = predicate
+            frc.fetchRequest.predicate = compoundPredicate
             
             do {
                 try frc.performFetch()
@@ -51,7 +61,7 @@ final class TrackerStore: NSObject {
             }
         } else {
             let request = TrackerCoreData.fetchRequest()
-            request.predicate = predicate
+            request.predicate = compoundPredicate
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
                 NSSortDescriptor(keyPath: \TrackerCoreData.title, ascending: true)
