@@ -47,3 +47,5 @@
 "statistics" = "Статистика";
 "every_day" = "Каждый день";
 "nothing_was_found" = "Ничего не найдено";
+"there_is_nothing_to_analyze_yet" = "Анализировать пока нечего";
+"trackers_completed" = "Трекеров завершено";

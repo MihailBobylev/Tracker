@@ -17,15 +17,25 @@ final class StatisticsCoordinator: TabBarPresentableCoordinator {
     }()
     
     var navigationController: UINavigationController
-
-    init(navigation: UINavigationController) {
+    private let trackersDataProvider: TrackersDataProvider
+    
+    init(navigation: UINavigationController, trackersDataProvider: TrackersDataProvider) {
         self.navigationController = navigation
+        self.trackersDataProvider = trackersDataProvider
     }
     
     func start() {
         navigationController.pushViewController(
-            UIViewController(),
+            createStatisticsController(),
             animated: false
         )
+    }
+}
+
+private extension StatisticsCoordinator {
+    func createStatisticsController() -> UIViewController {
+        let viewModel = StatisticsViewModel(trackersDataProvider: trackersDataProvider)
+        let viewController = StatisticsViewController(viewModel: viewModel)
+        return viewController
     }
 }

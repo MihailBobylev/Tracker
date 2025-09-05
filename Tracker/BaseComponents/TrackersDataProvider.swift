@@ -42,6 +42,10 @@ final class TrackersDataProvider {
         trackerRecordStore.completionCount(for: tracker)
     }
     
+    func completedTrackersCount() -> Int {
+        trackerRecordStore.completedTrackersCount()
+    }
+    
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
         try? trackerStore.addTracker(tracker, to: categoryTitle)
     }

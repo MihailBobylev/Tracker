@@ -15,6 +15,7 @@ protocol TabBarPresentableCoordinator: Coordinator {
 final class MainTabbarController: UITabBarController {
     
     private var coordinators: [TabBarPresentableCoordinator] = []
+    private let trackersDataProvider = TrackersDataProvider()
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -28,8 +29,8 @@ final class MainTabbarController: UITabBarController {
     }
     
     private func fillCoordinators() {
-        let trackersCoordinator = TrackersCoordinator(navigation: UINavigationController())
-        let statisticsCoordinator = StatisticsCoordinator(navigation: UINavigationController())
+        let trackersCoordinator = TrackersCoordinator(navigation: UINavigationController(), trackersDataProvider: trackersDataProvider)
+        let statisticsCoordinator = StatisticsCoordinator(navigation: UINavigationController(), trackersDataProvider: trackersDataProvider)
 
         coordinators = [
             trackersCoordinator,

@@ -105,13 +105,24 @@ final class TrackerRecordStore: NSObject {
     }
 
     func completionCount(for tracker: Tracker) -> Int {
-        let fetchRequest: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
+        let fetchRequest = TrackerRecordCoreData.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
 
         do {
             return try context.count(for: fetchRequest)
         } catch {
             print("Ошибка fetch TrackerRecord: \(error)")
+            return 0
+        }
+    }
+    
+    func completedTrackersCount() -> Int {
+        let request = TrackerRecordCoreData.fetchRequest()
+        do {
+            let count = try context.count(for: request)
+            return count
+        } catch {
+            print("Ошибка при получении количества: \(error)")
             return 0
         }
     }

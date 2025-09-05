@@ -9,8 +9,9 @@ import UIKit
 
 final class TrackersCoordinator: TabBarPresentableCoordinator {
     private var trackerViewModel: TrackersViewModel?
-    private let trackersDataProvider = TrackersDataProvider()
+    private let trackersDataProvider: TrackersDataProvider
     private let categoriesDataProvider = CategoriesDataProvider()
+    private let analyticsService = AnalyticsService()
     
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icTrackerSelected)
@@ -22,8 +23,9 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
     
     var navigationController: UINavigationController
 
-    init(navigation: UINavigationController) {
+    init(navigation: UINavigationController, trackersDataProvider: TrackersDataProvider) {
         self.navigationController = navigation
+        self.trackersDataProvider = trackersDataProvider
     }
     
     func start() {
@@ -49,11 +51,10 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
 private extension TrackersCoordinator {
     func createTrackersController() -> UIViewController {
         let viewModel = TrackersViewModel(coordinator: self,
-                                          trackersDataProvider: trackersDataProvider)
+                                          trackersDataProvider: trackersDataProvider,
+                                          analyticsService: analyticsService)
         trackerViewModel = viewModel
         let viewController = TrackersViewController(viewModel: viewModel)
         return viewController
     }
-    
-    
 }

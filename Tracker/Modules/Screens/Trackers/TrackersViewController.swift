@@ -96,6 +96,16 @@ final class TrackersViewController: UIViewController {
         viewModel.selectedDate = datePicker.date
         view.addKeyboardDismissTap()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewModel.screenWasOpenedMetrica()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        viewModel.screenWasClosedMetrica()
+    }
 }
 
 extension TrackersViewController: TrackersViewModelDelegate {

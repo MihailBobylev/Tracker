@@ -18,11 +18,18 @@ protocol TrackersViewModelProtocol {
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func goToAddNewTrackerScreen()
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String)
+    func screenWasOpenedMetrica()
+    func screenWasClosedMetrica()
 }
 
 final class TrackersViewModel: TrackersViewModelProtocol {
+    private struct Constants {
+        static var metricaScreenName = "Main"
+    }
+    
     private let coordinator: TrackersCoordinator
     private let trackersDataProvider: TrackersDataProvider
+    private let analyticsService: AnalyticsService
     private let calendar = Calendar.current
     private let feedbackGenerator = UINotificationFeedbackGenerator()
     private var trackerCollectionViewManager: TrackerCollectionViewManagerProtocol?
@@ -41,8 +48,9 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     }
     weak var delegate: TrackersViewModelDelegate?
     
-    init(coordinator: TrackersCoordinator, trackersDataProvider: TrackersDataProvider) {
+    init(coordinator: TrackersCoordinator, trackersDataProvider: TrackersDataProvider, analyticsService: AnalyticsService) {
         self.coordinator = coordinator
+        self.analyticsService = analyticsService
         self.trackersDataProvider = trackersDataProvider
         self.trackersDataProvider.delegate = self
     }
@@ -56,12 +64,55 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     }
     
     func goToAddNewTrackerScreen() {
+        addTrackerMetrica()
         coordinator.createAddNewTrackerController()
     }
     
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
         trackersDataProvider.addNewTracker(tracker, to: categoryTitle)
         updateTrackers(for: selectedDate, text: searchedText)
+    }
+}
+
+// MARK: Metrica
+extension TrackersViewModel {
+    func screenWasOpenedMetrica() {
+        let metricaModel = MetricaModel(event: .open, screen: Constants.metricaScreenName, item: .none)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func screenWasClosedMetrica() {
+        let metricaModel = MetricaModel(event: .close, screen: Constants.metricaScreenName, item: .none)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func addTrackerMetrica() {
+        let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .addTrack)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func completeTrackerMetrica() {
+        let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .track)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func openFiltersMetrica() {
+        let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .filter)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func editTrackerMetrica() {
+        let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .edit)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func deleteTrakerMetrica() {
+        let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .delete)
+        reportMetrica(model: metricaModel)
+    }
+    
+    func reportMetrica(model: MetricaModel) {
+        analyticsService.report(model: model)
     }
 }
 
@@ -72,7 +123,9 @@ extension TrackersViewModel: TrackerCollectionViewManagerProtocolDelegate {
             feedbackGenerator.notificationOccurred(.error)
             return
         }
+        completeTrackerMetrica()
         trackersDataProvider.completeTracker(tracker: tracker, for: selectedDate)
+        NotificationCenter.default.post(name: .trackerComplete, object: self)
     }
 }
 
