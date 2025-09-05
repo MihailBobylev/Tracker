@@ -14,6 +14,13 @@ final class TrackerTests: XCTestCase {
         let viewModel = TrackersViewModelMock()
         let vc = TrackersViewController(viewModel: viewModel)
         
-        assertSnapshot(of: vc, as: .image)
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .light)))
+    }
+    
+    func testViewControllerDark() {
+        let viewModel = TrackersViewModelMock()
+        let vc = TrackersViewController(viewModel: viewModel)
+        
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .dark)))
     }
 }

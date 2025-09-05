@@ -115,7 +115,8 @@ extension TrackersViewController: TrackersViewModelDelegate {
 
 private extension TrackersViewController {
     func configureNavBar() {
-        let leftButton = UIBarButtonItem(image: UIImage(resource: .icAddTracker).withRenderingMode(.alwaysOriginal),
+        let plusButton = UIImage(resource: .icAddTracker).withTintColor(.veryDark, renderingMode: .alwaysOriginal)
+        let leftButton = UIBarButtonItem(image: plusButton,
                                          style: .plain,
                                          target: self,
                                          action: #selector(leftButtonTapped))
@@ -131,7 +132,7 @@ private extension TrackersViewController {
     }
     
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         view.addSubview(titleLabel)
         view.addSubview(searchHeaderView)
         view.addSubview(mainCollectionView)

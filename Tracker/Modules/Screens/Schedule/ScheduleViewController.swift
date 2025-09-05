@@ -68,7 +68,7 @@ extension ScheduleViewController: ScheduleViewModelDelegate {
 
 private extension ScheduleViewController {
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         
         view.addSubview(titleLabel)
         view.addSubview(scheduleCollectionView)

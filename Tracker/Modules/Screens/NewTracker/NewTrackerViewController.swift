@@ -92,7 +92,7 @@ extension NewTrackerViewController: NewTrackerViewModelDelegate {
 
 private extension NewTrackerViewController {
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         
         view.addSubview(titleLabel)
         view.addSubview(mainCollectionView)

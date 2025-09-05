@@ -22,7 +22,7 @@ final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
     private let colorView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 10
-        view.layer.borderColor = UIColor.white.cgColor
+        view.layer.borderColor = UIColor.backgroundWhite.cgColor
         return view
     }()
     
@@ -42,7 +42,7 @@ final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        backgroundColor = .white
+        backgroundColor = .backgroundWhite
         colorView.layer.borderWidth = 0
     }
 }
@@ -56,7 +56,7 @@ extension ColorCell {
     }
     
     func changeSelectedState(isSelected: Bool) {
-        backgroundColor = isSelected ? mainColor?.withAlphaComponent(0.3) : .white
+        backgroundColor = isSelected ? mainColor?.withAlphaComponent(0.3) : .backgroundWhite
         colorView.layer.borderWidth = isSelected ? 3 : 0
     }
 }
@@ -73,7 +73,7 @@ private extension ColorCell {
     }
     
     func setupAppearance() {
-        backgroundColor = .white
+        backgroundColor = .backgroundWhite
         layer.cornerRadius = 12
         layer.masksToBounds = true
     }

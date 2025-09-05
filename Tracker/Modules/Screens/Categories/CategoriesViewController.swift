@@ -98,7 +98,7 @@ extension CategoriesViewController: CategoriesViewModelDelegate {
 
 private extension CategoriesViewController {
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         
         view.addSubview(titleLabel)
         view.addSubview(emptyStateVStack)

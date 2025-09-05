@@ -18,8 +18,8 @@ final class MainTabbarController: UITabBarController {
     
     init() {
         super.init(nibName: nil, bundle: nil)
-        UITabBar.appearance().backgroundColor = #colorLiteral(red: 0.9843137255, green: 0.9882352941, blue: 0.9960784314, alpha: 1)
-        tabBar.addTopBorder(color: .lightGray)
+        UITabBar.appearance().backgroundColor = .backgroundWhite
+        tabBar.addTopBorder(color: .sepLightGray)
         fillCoordinators()
     }
     

@@ -92,7 +92,7 @@ private extension NewCategoryViewController {
     }
     
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         view.addSubview(titleLabel)
         view.addSubview(textField)
         view.addSubview(addCategoryButton)
