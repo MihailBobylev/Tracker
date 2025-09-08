@@ -9,6 +9,7 @@ import UIKit
 
 protocol TrackersViewModelDelegate: AnyObject {
     func updateEmptyState(to type: EmptyStateType)
+    func showAlertForDeleteTrackerAction(for indexPath: IndexPath)
 }
 
 protocol TrackersViewModelProtocol {
@@ -18,6 +19,7 @@ protocol TrackersViewModelProtocol {
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func goToAddNewTrackerScreen()
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String)
+    func deleteTracker(at indexPath: IndexPath)
     func screenWasOpenedMetrica()
     func screenWasClosedMetrica()
 }
@@ -72,6 +74,13 @@ final class TrackersViewModel: TrackersViewModelProtocol {
         trackersDataProvider.addNewTracker(tracker, to: categoryTitle)
         updateTrackers(for: selectedDate, text: searchedText)
     }
+    
+    func deleteTracker(at indexPath: IndexPath) {
+        if let trackerCoreData = trackersDataProvider.trackerStore.fetchedResultsController?.object(at: indexPath),
+           let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
+            trackersDataProvider.deleteTracker(tracker)
+        }
+    }
 }
 
 // MARK: Metrica
@@ -117,6 +126,10 @@ extension TrackersViewModel {
 }
 
 extension TrackersViewModel: TrackerCollectionViewManagerProtocolDelegate {
+    func showAlertForDeleteTrackerAction(for indexPath: IndexPath) {
+        delegate?.showAlertForDeleteTrackerAction(for: indexPath)
+    }
+    
     func completeTracker(tracker: Tracker, indexPath: IndexPath) {
         guard !calendar.isDateInFuture(selectedDate) else {
             feedbackGenerator.prepare()

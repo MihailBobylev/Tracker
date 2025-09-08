@@ -102,6 +102,10 @@ final class TrackerCell: UICollectionViewCell {
     func setCompleted(isCompleted: Bool) {
         plusButton.isSelected = isCompleted
     }
+    
+    func getBackgroundCardView() -> UIView {
+        backgroundCardView
+    }
 }
 
 private extension TrackerCell {

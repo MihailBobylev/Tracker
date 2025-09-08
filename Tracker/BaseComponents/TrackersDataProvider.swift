@@ -53,6 +53,10 @@ final class TrackersDataProvider {
     func completeTracker(tracker: Tracker, for date: Date) {
         try? trackerRecordStore.toggleRecord(for: tracker, on: date)
     }
+    
+    func deleteTracker(_ tracker: Tracker) {
+        try? trackerStore.deleteTracker(by: tracker.id)
+    }
 }
 
 extension TrackersDataProvider: TrackerStoreDelegate {

@@ -14,6 +14,9 @@ final class TrackersViewController: UIViewController {
         static var textFieldPlaceholderText = NSLocalizedString("search", comment: "Text displayed on search field")
         static var emptyStateLabelText = NSLocalizedString("what_are_we_going_to_track", comment: "Text displayed on empty state label")
         static var locale = NSLocalizedString("locale", comment: "locale")
+        static var alertTitle = NSLocalizedString("are_you_sure_you_want_to_delete_the_tracker", comment: "title for alert")
+        static var alertCancelTitle = NSLocalizedString("cancel_title", comment: "title for cancel action")
+        static var alertDeleteTitle = NSLocalizedString("delete", comment: "title for delete action")
     }
     
     private let titleLabel: UILabel = {
@@ -121,6 +124,12 @@ extension TrackersViewController: TrackersViewModelDelegate {
             mainCollectionView.isHidden = false
         }
     }
+    
+    func showAlertForDeleteTrackerAction(for indexPath: IndexPath) {
+        presentDeleteAlert { [weak self] in
+            self?.viewModel.deleteTracker(at: indexPath)
+        }
+    }
 }
 
 private extension TrackersViewController {
@@ -195,6 +204,31 @@ private extension TrackersViewController {
         }
         
         return container
+    }
+    
+    func presentDeleteAlert(onDelete: @escaping () -> Void) {
+        let alert = UIAlertController(
+            title: Constants.alertTitle,
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        let deleteAction = UIAlertAction(
+            title: Constants.alertDeleteTitle,
+            style: .destructive
+        ) { _ in
+            onDelete()
+        }
+        
+        let cancelAction = UIAlertAction(
+            title: Constants.alertCancelTitle,
+            style: .cancel
+        )
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
     }
 }
 

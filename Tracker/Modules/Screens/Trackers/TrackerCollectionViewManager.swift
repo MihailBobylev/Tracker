@@ -9,6 +9,7 @@ import UIKit
 
 protocol TrackerCollectionViewManagerProtocolDelegate: AnyObject {
     func completeTracker(tracker: Tracker, indexPath: IndexPath)
+    func showAlertForDeleteTrackerAction(for indexPath: IndexPath)
 }
 
 protocol TrackerCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource  {
@@ -20,6 +21,11 @@ protocol TrackerCollectionViewManagerProtocol: UICollectionViewDelegate, UIColle
 }
 
 final class TrackerCollectionViewManager: NSObject, TrackerCollectionViewManagerProtocol {
+    private struct Constants {
+        static var editActionTitle = NSLocalizedString("edit", comment: "title for edit action")
+        static var deleteActionTitle = NSLocalizedString("delete", comment: "title for delete action")
+    }
+    
     private let trackersDataProvider: TrackersDataProvider
     private let collectionView: UICollectionView
     private var selectedDate: Date
@@ -147,6 +153,45 @@ extension TrackerCollectionViewManager {
         }
         
         return UICollectionViewCell()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration( identifier: indexPath as NSIndexPath, previewProvider: nil) { _ in
+            let edit = UIAction(title: Constants.editActionTitle) { [weak self] action in
+                guard let self else { return }
+                if let trackerCoreData = trackersDataProvider.trackerStore.fetchedResultsController?.object(at: indexPath),
+                   let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
+                    
+                }
+            }
+            
+            let delete = UIAction(title: Constants.deleteActionTitle, attributes: .destructive) { [weak self] action in
+                guard let self else { return }
+                delegate?.showAlertForDeleteTrackerAction(for: indexPath)
+            }
+            
+            return UIMenu(title: "", children: [edit, delete])
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration)
+    -> UITargetedPreview? {
+        guard
+            let indexPath = configuration.identifier as? IndexPath,
+            let cell = collectionView.cellForItem(at: indexPath) as? TrackerCell
+        else { return nil }
+
+        let targetView = cell.getBackgroundCardView()
+
+        let params = UIPreviewParameters()
+        params.backgroundColor = .clear
+        params.visiblePath = UIBezierPath(
+            roundedRect: targetView.bounds,
+            cornerRadius: 16
+        )
+
+        return UITargetedPreview(view: targetView, parameters: params)
     }
 }
 

@@ -49,3 +49,7 @@
 "nothing_was_found" = "Ничего не найдено";
 "there_is_nothing_to_analyze_yet" = "Анализировать пока нечего";
 "trackers_completed" = "Трекеров завершено";
+"edit" = "Редактировать";
+"delete" = "Удалить";
+"cancel_title" = "Отмена";
+"are_you_sure_you_want_to_delete_the_tracker" = "Уверены, что хотите удалить трекер?";

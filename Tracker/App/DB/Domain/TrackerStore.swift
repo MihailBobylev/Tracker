@@ -130,6 +130,27 @@ final class TrackerStore: NSObject {
 
         return Tracker(id: id, title: title, color: color, emoji: emoji, schedule: schedule)
     }
+    
+    func deleteTracker(by id: UUID) throws {
+        let fetchRequest = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(
+            format: "id == %@",
+            id as CVarArg
+        )
+        fetchRequest.fetchLimit = 1
+        
+        if let trackerToDelete = try context.fetch(fetchRequest).first {
+            context.delete(trackerToDelete)
+            do {
+                try context.save()
+            } catch {
+                print("❌ Ошибка при сохранении после удаления: \(error)")
+                throw error
+            }
+        } else {
+            throw NSError(domain: "DeleteTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Tracker with id \(id) not found"])
+        }
+    }
 }
 
 extension TrackerStore: NSFetchedResultsControllerDelegate {

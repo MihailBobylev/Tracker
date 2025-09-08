@@ -49,3 +49,7 @@
 "nothing_was_found" = "Nothing was found";
 "there_is_nothing_to_analyze_yet" = "There is nothing to analyze yet";
 "trackers_completed" = "Trackers completed";
+"edit" = "Edit";
+"delete" = "Delete";
+"cancel_title" = "Cancel";
+"are_you_sure_you_want_to_delete_the_tracker" = "Are you sure you want to delete the tracker?";
