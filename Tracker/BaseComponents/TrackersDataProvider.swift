@@ -46,8 +46,8 @@ final class TrackersDataProvider {
         trackerRecordStore.completedTrackersCount()
     }
     
-    func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
-        try? trackerStore.addTracker(tracker, to: categoryTitle)
+    func addOrUpdateTracker(_ tracker: Tracker, to categoryTitle: String) {
+        try? trackerStore.addOrUpdateTracker(tracker, to: categoryTitle)
     }
     
     func completeTracker(tracker: Tracker, for date: Date) {
@@ -56,6 +56,10 @@ final class TrackersDataProvider {
     
     func deleteTracker(_ tracker: Tracker) {
         try? trackerStore.deleteTracker(by: tracker.id)
+    }
+    
+    func getCategory(for tracker: Tracker) -> TrackerCategory? {
+        try? trackerStore.getTrackerCategory(by: tracker.id)
     }
 }
 

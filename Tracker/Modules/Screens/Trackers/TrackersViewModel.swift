@@ -67,17 +67,18 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     
     func goToAddNewTrackerScreen() {
         addTrackerMetrica()
-        coordinator.createAddNewTrackerController()
+        coordinator.createAddNewTrackerController(trackerEditMode: .create)
     }
     
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
-        trackersDataProvider.addNewTracker(tracker, to: categoryTitle)
+        trackersDataProvider.addOrUpdateTracker(tracker, to: categoryTitle)
         updateTrackers(for: selectedDate, text: searchedText)
     }
     
     func deleteTracker(at indexPath: IndexPath) {
         if let trackerCoreData = trackersDataProvider.trackerStore.fetchedResultsController?.object(at: indexPath),
            let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
+            deleteTrackerMetrica()
             trackersDataProvider.deleteTracker(tracker)
         }
     }
@@ -115,7 +116,7 @@ extension TrackersViewModel {
         reportMetrica(model: metricaModel)
     }
     
-    func deleteTrakerMetrica() {
+    func deleteTrackerMetrica() {
         let metricaModel = MetricaModel(event: .click, screen: Constants.metricaScreenName, item: .delete)
         reportMetrica(model: metricaModel)
     }
@@ -140,6 +141,10 @@ extension TrackersViewModel: TrackerCollectionViewManagerProtocolDelegate {
         trackersDataProvider.completeTracker(tracker: tracker, for: selectedDate)
         NotificationCenter.default.post(name: .trackerComplete, object: self)
     }
+    
+    func editTracker(tracker: Tracker) {
+        goToEditTrackerScreen(for: tracker)
+    }
 }
 
 extension TrackersViewModel: TrackersDataProviderDelegate {
@@ -163,5 +168,10 @@ private extension TrackersViewModel {
         } else {
             delegate?.updateEmptyState(to: .none)
         }
+    }
+    
+    func goToEditTrackerScreen(for tracker: Tracker) {
+        editTrackerMetrica()
+        coordinator.createAddNewTrackerController(trackerEditMode: .edit(tracker: tracker))
     }
 }

@@ -18,23 +18,29 @@ protocol MainCollectionViewManagerProtocol: UICollectionViewDelegate, UICollecti
     var delegate: MainCollectionViewManagerDelegate? { get set }
     func createLayout() -> UICollectionViewCompositionalLayout
     func setupCollectionView()
-    func updateSelectedWeekday(with text: String?)
-    func updateSelectedCategory(with text: String?)
+    func updateEditableTracker(with state: TrackerEditableState)
+    func updateSelectedWeekday()
+    func updateSelectedCategory()
 }
 
 final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtocol {
     private let trackersDataProvider: TrackersDataProvider
     private let collectionView: UICollectionView
     private let maxNumberOfCharacters = 38
-    private var sections: [NewTrackerSection]
+    private let sections: [NewTrackerSection]
     private var selectedIndexPathsBySection: [Int: IndexPath] = [:]
     
+    private var editableTracker: TrackerEditableState
     weak var delegate: MainCollectionViewManagerDelegate?
     
-    init(trackersDataProvider: TrackersDataProvider, collectionView: UICollectionView, sections: [NewTrackerSection]) {
+    init(trackersDataProvider: TrackersDataProvider,
+         collectionView: UICollectionView,
+         sections: [NewTrackerSection],
+         editableTracker: TrackerEditableState) {
         self.trackersDataProvider = trackersDataProvider
         self.collectionView = collectionView
         self.sections = sections
+        self.editableTracker = editableTracker
         super.init()
     }
     
@@ -79,9 +85,9 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
         return layout
     }
     
-    func updateSelectedCategory(with text: String?) {
+    func updateSelectedCategory() {
         guard let sectionIndex = sections.firstIndex(where: { $0 is DetailsSection }),
-              var detailsSection = sections[sectionIndex] as? DetailsSection
+              let detailsSection = sections[sectionIndex] as? DetailsSection
         else { return }
         
         guard let itemIndex = detailsSection.models.firstIndex(where: {
@@ -89,17 +95,13 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
             return false
         }) else { return }
         
-        detailsSection.models[itemIndex] = .category(subtitle: text)
-        
-        sections[sectionIndex] = detailsSection
-        
         let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
         collectionView.reloadItems(at: [indexPath])
     }
     
-    func updateSelectedWeekday(with text: String?) {
+    func updateSelectedWeekday() {
         guard let sectionIndex = sections.firstIndex(where: { $0 is DetailsSection }),
-              var detailsSection = sections[sectionIndex] as? DetailsSection
+              let detailsSection = sections[sectionIndex] as? DetailsSection
         else { return }
         
         guard let itemIndex = detailsSection.models.firstIndex(where: {
@@ -107,12 +109,12 @@ final class MainCollectionViewManager: NSObject, MainCollectionViewManagerProtoc
             return false
         }) else { return }
         
-        detailsSection.models[itemIndex] = .schedule(subtitle: text)
-
-        sections[sectionIndex] = detailsSection
-        
         let indexPath = IndexPath(item: itemIndex, section: sectionIndex)
         collectionView.reloadItems(at: [indexPath])
+    }
+    
+    func updateEditableTracker(with state: TrackerEditableState) {
+        self.editableTracker = state
     }
 }
 
@@ -153,6 +155,9 @@ extension MainCollectionViewManager {
             ) as? TitleTextFieldCell else {
                 return UICollectionViewCell()
             }
+            
+            cell.configure(with: editableTracker.title)
+            
             cell.onTextChanged = { [weak self] text in
                 guard let self else { return }
                 let isError = text.count >= maxNumberOfCharacters
@@ -167,16 +172,22 @@ extension MainCollectionViewManager {
             return cell
             
         case let sectionType as DetailsSection:
-            let subsection = sectionType.models[indexPath.item]
-            
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: DetailsCell.reuseID,
                 for: indexPath
             ) as? DetailsCell else {
                 return UICollectionViewCell()
             }
+            let subsection = sectionType.models[indexPath.item]
             
-            cell.configure(title: subsection.title, subtitle: subsection.subtitle, accessory: .chevron)
+            var subtitle: String?
+            if case .category = subsection {
+                subtitle = editableTracker.category?.title
+            } else {
+                subtitle = editableTracker.weekdays.labelText
+            }
+            
+            cell.configure(title: subsection.title, subtitle: subtitle, accessory: .chevron)
             let isLastRow = indexPath.row == sections[indexPath.section].numberOfItems - 1
             cell.setSeparatorHidden(isLastRow)
             return cell
@@ -190,7 +201,11 @@ extension MainCollectionViewManager {
             }
             
             let subitem = sectionType.models[indexPath.item]
-            cell.configure(emoji: subitem.emoji)
+            let isSelected = editableTracker.emoji == subitem.emoji
+            if isSelected {
+                selectedIndexPathsBySection[indexPath.section] = indexPath
+            }
+            cell.configure(emoji: subitem.emoji, isSelected: isSelected)
             return cell
          
         case let sectionType as ColorsSection:
@@ -202,7 +217,11 @@ extension MainCollectionViewManager {
             }
             
             let subitem = sectionType.models[indexPath.item]
-            cell.configure(color: subitem.color)
+            let isSelected = editableTracker.color?.hexString == subitem.color.hexString
+            if isSelected {
+                selectedIndexPathsBySection[indexPath.section] = indexPath
+            }
+            cell.configure(color: subitem.color, isSelected: isSelected)
             return cell
             
         default:

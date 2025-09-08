@@ -71,6 +71,10 @@ final class TitleTextFieldCell: UICollectionViewCell {
     func changeErrorState(isError: Bool) {
         errorLabel.isHidden = !isError
     }
+    
+    func configure(with text: String) {
+        textField.text = text
+    }
 }
 
 extension TitleTextFieldCell: UITextFieldDelegate {

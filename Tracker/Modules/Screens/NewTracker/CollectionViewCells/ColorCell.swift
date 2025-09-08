@@ -42,17 +42,17 @@ final class ColorCell: UICollectionViewCell, SelectableCellProtocol {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        backgroundColor = .backgroundWhite
-        colorView.layer.borderWidth = 0
+        changeSelectedState(isSelected: false)
     }
 }
 
 // MARK: - Public Methods
 
 extension ColorCell {
-    func configure(color: UIColor) {
+    func configure(color: UIColor, isSelected: Bool) {
         mainColor = color
         colorView.backgroundColor = color
+        changeSelectedState(isSelected: isSelected)
     }
     
     func changeSelectedState(isSelected: Bool) {

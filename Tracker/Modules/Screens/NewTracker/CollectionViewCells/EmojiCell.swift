@@ -31,14 +31,15 @@ final class EmojiCell: UICollectionViewCell, SelectableCellProtocol {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        backgroundColor = .backgroundWhite
+        changeSelectedState(isSelected: false)
         emojiLabel.text = nil
     }
 }
 
 extension EmojiCell {
-    func configure(emoji: String) {
+    func configure(emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji
+        changeSelectedState(isSelected: isSelected)
     }
     
     func changeSelectedState(isSelected: Bool) {

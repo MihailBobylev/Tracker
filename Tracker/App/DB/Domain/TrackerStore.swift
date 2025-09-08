@@ -84,21 +84,32 @@ final class TrackerStore: NSObject {
             }
         }
     }
-    
-    func addTracker(_ tracker: Tracker, to categoryTitle: String) throws {
-        let trackerCoreData = TrackerCoreData(context: context)
-        trackerCoreData.id = tracker.id
+
+    func addOrUpdateTracker(_ tracker: Tracker, to categoryTitle: String) throws {
+        let fetchTrackerRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchTrackerRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        fetchTrackerRequest.fetchLimit = 1
+        
+        let trackerCoreData: TrackerCoreData
+        if let existingTracker = try context.fetch(fetchTrackerRequest).first {
+            trackerCoreData = existingTracker
+        } else {
+            trackerCoreData = TrackerCoreData(context: context)
+            trackerCoreData.id = tracker.id
+        }
+        
         trackerCoreData.title = tracker.title
         trackerCoreData.emoji = tracker.emoji
         trackerCoreData.color = tracker.color.hexString
         trackerCoreData.schedule = tracker.schedule.map { $0.mask }.joined()
 
-        let fetchRequest = TrackerCategoryCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
-        fetchRequest.fetchLimit = 1
+        let fetchCategoryRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        fetchCategoryRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
+        fetchCategoryRequest.fetchLimit = 1
 
-        guard let category = try context.fetch(fetchRequest).first else {
-            throw NSError(domain: "AddTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Category \(categoryTitle) not found"])
+        guard let category = try context.fetch(fetchCategoryRequest).first else {
+            throw NSError(domain: "AddOrUpdateTracker", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Category \(categoryTitle) not found"])
         }
 
         trackerCoreData.category = category
@@ -106,7 +117,8 @@ final class TrackerStore: NSObject {
         do {
             try context.save()
         } catch {
-            print("Ошибка при сохранении: \(error)")
+            print("❌ Ошибка при сохранении: \(error)")
+            throw error
         }
     }
     
@@ -149,6 +161,18 @@ final class TrackerStore: NSObject {
             }
         } else {
             throw NSError(domain: "DeleteTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Tracker with id \(id) not found"])
+        }
+    }
+    
+    func getTrackerCategory(by id: UUID) throws -> TrackerCategory? {
+        let fetchRequest = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        fetchRequest.fetchLimit = 1
+        
+        if let trackerCoreData = try context.fetch(fetchRequest).first, let categoryTitle = trackerCoreData.category?.title {
+            return TrackerCategory(title: categoryTitle, trackers: [])
+        } else {
+            throw NSError(domain: "GetTrackerCategory", code: 1, userInfo: [NSLocalizedDescriptionKey: "Tracker with id \(id) not found"])
         }
     }
 }

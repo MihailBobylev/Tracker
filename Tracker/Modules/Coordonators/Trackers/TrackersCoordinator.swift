@@ -35,14 +35,15 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
         )
     }
     
-    func createAddNewTrackerController() {
+    func createAddNewTrackerController(trackerEditMode: TrackerEditMode) {
         let newTrackerCoordinator = NewTrackerCoordinator(
             navigationController: navigationController,
             trackersDataProvider: trackersDataProvider,
-            categoriesDataProvider: categoriesDataProvider
+            categoriesDataProvider: categoriesDataProvider,
+            trackerEditMode: trackerEditMode
         )
-        newTrackerCoordinator.onFinishCreatingTracker = { [weak self] newTracker, categotyTitle in
-            self?.trackerViewModel?.addNewTracker(newTracker, to: categotyTitle)
+        newTrackerCoordinator.onFinishCreatingTracker = { [weak self] newTracker, categoryTitle in
+            self?.trackerViewModel?.addNewTracker(newTracker, to: categoryTitle)
         }
         newTrackerCoordinator.start()
     }

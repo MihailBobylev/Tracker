@@ -10,6 +10,7 @@ import UIKit
 protocol TrackerCollectionViewManagerProtocolDelegate: AnyObject {
     func completeTracker(tracker: Tracker, indexPath: IndexPath)
     func showAlertForDeleteTrackerAction(for indexPath: IndexPath)
+    func editTracker(tracker: Tracker)
 }
 
 protocol TrackerCollectionViewManagerProtocol: UICollectionViewDelegate, UICollectionViewDataSource  {
@@ -96,6 +97,11 @@ final class TrackerCollectionViewManager: NSObject, TrackerCollectionViewManager
                     collectionView.moveItem(at: move.oldIndexPath, to: move.newIndexPath)
                 }
             }
+        } completion: { _ in
+            if !moved.isEmpty {
+                let newIndexPaths = moved.map(\.newIndexPath)
+                self.collectionView.reloadItems(at: newIndexPaths)
+            }
         }
     }
     
@@ -161,7 +167,7 @@ extension TrackerCollectionViewManager {
                 guard let self else { return }
                 if let trackerCoreData = trackersDataProvider.trackerStore.fetchedResultsController?.object(at: indexPath),
                    let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
-                    
+                    delegate?.editTracker(tracker: tracker)
                 }
             }
             

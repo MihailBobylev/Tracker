@@ -10,7 +10,6 @@ import Foundation
 import UIKit
 
 final class NewTrackerService {
-    
     func fetchNewTrackerSections() -> [NewTrackerSection] {
         return [
             titleSection,
@@ -28,8 +27,8 @@ final class NewTrackerService {
     
     private var detailsSection: NewTrackerSection {
         DetailsSection(sectionType: .details, models: [
-            .category(subtitle: nil),
-            .schedule(subtitle: nil)
+            .category,
+            .schedule
         ])
     }
 
