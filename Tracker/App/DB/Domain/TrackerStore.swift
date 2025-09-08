@@ -15,6 +15,7 @@ protocol TrackerStoreDelegate: AnyObject {
 }
 
 final class TrackerStore: NSObject {
+    private let calendar = Calendar.current
     private let context: NSManagedObjectContext
     var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
     
@@ -38,14 +39,32 @@ final class TrackerStore: NSObject {
         super.init()
     }
     
-    func reconfigureFetchedResultsController(for weekday: WeekdayType, searchText: String?) {
+    func reconfigureFetchedResultsController(for date: Date,
+                                             searchText: String?,
+                                             filterType: FilterMode) {
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let weekday = calendar.weekdayType(from: date),
+              let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
+        
         var predicates: [NSPredicate] = [
             NSPredicate(format: "%K CONTAINS %@", #keyPath(TrackerCoreData.schedule), weekday.mask)
         ]
-        
+
+        switch filterType {
+        case .completedTrackers:
+            predicates.append(
+                NSPredicate(format: "SUBQUERY(records, $r, $r.completionDate >= %@ AND $r.completionDate < %@).@count > 0", startOfDay as NSDate, endOfDay as NSDate)
+            )
+        case .uncompletedTrackers:
+            predicates.append(
+                NSPredicate(format: "SUBQUERY(records, $r, $r.completionDate >= %@ AND $r.completionDate < %@).@count == 0", startOfDay as NSDate, endOfDay as NSDate)
+            )
+        case .allTrackers, .todayTrackers:
+            break
+        }
+
         if let text = searchText, !text.isEmpty {
-            let titlePredicate = NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(TrackerCoreData.title), text)
-            predicates.append(titlePredicate)
+            predicates.append(NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(TrackerCoreData.title), text))
         }
         
         let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
@@ -73,7 +92,7 @@ final class TrackerStore: NSObject {
                 sectionNameKeyPath: #keyPath(TrackerCoreData.category.title),
                 cacheName: nil
             )
-                
+            
             controller.delegate = self
             self.fetchedResultsController = controller
             
@@ -86,7 +105,7 @@ final class TrackerStore: NSObject {
     }
 
     func addOrUpdateTracker(_ tracker: Tracker, to categoryTitle: String) throws {
-        let fetchTrackerRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        let fetchTrackerRequest = TrackerCoreData.fetchRequest()
         fetchTrackerRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
         fetchTrackerRequest.fetchLimit = 1
         
@@ -103,7 +122,7 @@ final class TrackerStore: NSObject {
         trackerCoreData.color = tracker.color.hexString
         trackerCoreData.schedule = tracker.schedule.map { $0.mask }.joined()
 
-        let fetchCategoryRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        let fetchCategoryRequest = TrackerCategoryCoreData.fetchRequest()
         fetchCategoryRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
         fetchCategoryRequest.fetchLimit = 1
 

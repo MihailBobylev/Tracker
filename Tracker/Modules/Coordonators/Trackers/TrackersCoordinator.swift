@@ -47,6 +47,10 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
         }
         newTrackerCoordinator.start()
     }
+    
+    func goToFilters(with selectedFilter: FilterMode) {
+        navigationController.present(createFiltersController(selectedFilter: selectedFilter), animated: true)
+    }
 }
 
 private extension TrackersCoordinator {
@@ -56,6 +60,15 @@ private extension TrackersCoordinator {
                                           analyticsService: analyticsService)
         trackerViewModel = viewModel
         let viewController = TrackersViewController(viewModel: viewModel)
+        return viewController
+    }
+    
+    func createFiltersController(selectedFilter: FilterMode) -> UIViewController {
+        let viewModel = FiltersViewModel(selectedFilter: selectedFilter, trackersDataProvider: trackersDataProvider)
+        viewModel.filterSelected = { [weak self] filterMode in
+            self?.trackerViewModel?.updateFiltersSearch(filter: filterMode)
+        }
+        let viewController = FiltersViewController(viewModel: viewModel)
         return viewController
     }
 }

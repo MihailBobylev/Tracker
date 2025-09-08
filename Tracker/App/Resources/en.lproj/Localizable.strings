@@ -54,3 +54,8 @@
 "delete" = "Delete";
 "cancel_title" = "Cancel";
 "are_you_sure_you_want_to_delete_the_tracker" = "Are you sure you want to delete the tracker?";
+"filters" = "Filters";
+"all_trackers" = "All trackers";
+"trackers_for_today" = "Trackers for today";
+"completed" = "Completed";
+"unfinished" = "Unfinished";

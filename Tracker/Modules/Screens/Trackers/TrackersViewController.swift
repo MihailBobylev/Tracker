@@ -17,6 +17,7 @@ final class TrackersViewController: UIViewController {
         static var alertTitle = NSLocalizedString("are_you_sure_you_want_to_delete_the_tracker", comment: "title for alert")
         static var alertCancelTitle = NSLocalizedString("cancel_title", comment: "title for cancel action")
         static var alertDeleteTitle = NSLocalizedString("delete", comment: "title for delete action")
+        static var filtersTitle = NSLocalizedString("filters", comment: "title for filters button")
     }
     
     private let titleLabel: UILabel = {
@@ -49,11 +50,20 @@ final class TrackersViewController: UIViewController {
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.reuseID)
         collectionView.backgroundColor = .clear
         collectionView.contentInset.top = 24.dvs
-        collectionView.contentInset.bottom = 24.dvs
+        collectionView.contentInset.bottom = 72.dvs
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .onDrag
         return collectionView
+    }()
+    
+    private lazy var filtersButton: TrackerCustomButton = {
+        let button = TrackerCustomButton(style: .secondary)
+        button.setTitle(Constants.filtersTitle, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20.dhs, bottom: 0, right: 20.dhs)
+        button.addTarget(self, action: #selector(filtersButtonTapped), for: .touchUpInside)
+        button.isHidden = true
+        return button
     }()
     
     private let emptyStateVStack: UIStackView = {
@@ -112,16 +122,22 @@ final class TrackersViewController: UIViewController {
 }
 
 extension TrackersViewController: TrackersViewModelDelegate {
+    func updateDatePicker(to date: Date) {
+        datePicker.date = date
+    }
+    
     func updateEmptyState(to type: EmptyStateType) {
         switch type {
-        case .empty, .notFound:
-            emptyStateImageView.image = type.image
-            emptyStateLabel.text = type.text
-            emptyStateVStack.isHidden = false
-            mainCollectionView.isHidden = true
+        case .empty:
+            showEmptyState(type: type)
+            filtersButton.isHidden = true
+        case .notFound:
+            showEmptyState(type: type)
+            filtersButton.isHidden = false
         case .none:
             emptyStateVStack.isHidden = true
             mainCollectionView.isHidden = false
+            filtersButton.isHidden = false
         }
     }
     
@@ -156,6 +172,7 @@ private extension TrackersViewController {
         view.addSubview(searchHeaderView)
         view.addSubview(mainCollectionView)
         view.addSubview(emptyStateVStack)
+        view.addSubview(filtersButton)
         emptyStateVStack.addArrangedSubview(emptyStateImageView)
         emptyStateVStack.addArrangedSubview(emptyStateLabel)
         
@@ -174,6 +191,12 @@ private extension TrackersViewController {
             make.top.equalTo(searchHeaderView.snp.bottom).offset(10.dhs)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(-10.dvs)
+        }
+        
+        filtersButton.snp.makeConstraints { make in
+            make.height.equalTo(50.dvs)
+            make.centerX.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(16.dvs)
         }
         
         emptyStateImageView.snp.makeConstraints { make in
@@ -230,6 +253,13 @@ private extension TrackersViewController {
         
         present(alert, animated: true)
     }
+    
+    func showEmptyState(type: EmptyStateType) {
+        emptyStateImageView.image = type.image
+        emptyStateLabel.text = type.text
+        emptyStateVStack.isHidden = false
+        mainCollectionView.isHidden = true
+    }
 }
 
 // MARK: Actions
@@ -240,5 +270,9 @@ private extension TrackersViewController {
     
     @objc func leftButtonTapped() {
         viewModel.goToAddNewTrackerScreen()
+    }
+    
+    @objc private func filtersButtonTapped() {
+        viewModel.filtersButtonTapped()
     }
 }

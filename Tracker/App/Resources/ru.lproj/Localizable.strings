@@ -54,3 +54,8 @@
 "delete" = "Удалить";
 "cancel_title" = "Отмена";
 "are_you_sure_you_want_to_delete_the_tracker" = "Уверены, что хотите удалить трекер?";
+"filters" = "Фильтры";
+"all_trackers" = "Все трекеры";
+"trackers_for_today" = "Трекеры на сегодня";
+"completed" = "Завершенные";
+"unfinished" = "Незавершенные";

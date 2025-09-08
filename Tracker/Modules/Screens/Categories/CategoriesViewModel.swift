@@ -25,7 +25,6 @@ final class CategoriesViewModel: CategoriesViewModelProtocol {
     
     weak var delegate: CategoriesViewModelDelegate?
     
-    var onDaysSelected: ((Set<WeekdayType>) -> Void)?
     var categorySelected: ((TrackerCategory?) -> Void)?
     var didTapAddNewCategory: (() -> Void)?
     

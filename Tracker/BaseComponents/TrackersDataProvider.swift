@@ -12,7 +12,6 @@ protocol TrackersDataProviderDelegate: AnyObject {
 }
 
 final class TrackersDataProvider {
-    private let calendar = Calendar.current
     private let trackerRecordStore = TrackerRecordStore()
     
     lazy var trackerStore: TrackerStore = {
@@ -23,11 +22,10 @@ final class TrackersDataProvider {
     
     weak var delegate: TrackersDataProviderDelegate?
     
-    func trackers(for date: Date, searchText: String?) {
-        guard let weekday = calendar.weekdayType(from: date) else {
-            return
-        }
-        trackerStore.reconfigureFetchedResultsController(for: weekday, searchText: searchText)
+    func trackers(for date: Date, filterType: FilterMode, searchText: String?) {
+        trackerStore.reconfigureFetchedResultsController(for: date,
+                                                         searchText: searchText,
+                                                         filterType: filterType)
     }
 
     func tracker(from coreData: TrackerCoreData) -> Tracker? {

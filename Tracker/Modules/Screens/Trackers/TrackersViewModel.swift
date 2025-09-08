@@ -9,6 +9,7 @@ import UIKit
 
 protocol TrackersViewModelDelegate: AnyObject {
     func updateEmptyState(to type: EmptyStateType)
+    func updateDatePicker(to date: Date)
     func showAlertForDeleteTrackerAction(for indexPath: IndexPath)
 }
 
@@ -20,6 +21,7 @@ protocol TrackersViewModelProtocol {
     func goToAddNewTrackerScreen()
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String)
     func deleteTracker(at indexPath: IndexPath)
+    func filtersButtonTapped()
     func screenWasOpenedMetrica()
     func screenWasClosedMetrica()
 }
@@ -35,17 +37,18 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     private let calendar = Calendar.current
     private let feedbackGenerator = UINotificationFeedbackGenerator()
     private var trackerCollectionViewManager: TrackerCollectionViewManagerProtocol?
+    private var selectedFilter: FilterMode = .allTrackers
     
     var selectedDate = Date() {
         didSet {
             updateDate(newDate: selectedDate)
-            updateTrackers(for: selectedDate, text: searchedText)
+            updateTrackers(for: selectedDate, filter: selectedFilter, text: searchedText)
         }
     }
     
     var searchedText: String = "" {
         didSet {
-            updateTrackers(for: selectedDate, text: searchedText)
+            updateTrackers(for: selectedDate, filter: selectedFilter, text: searchedText)
         }
     }
     weak var delegate: TrackersViewModelDelegate?
@@ -72,7 +75,7 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     
     func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
         trackersDataProvider.addOrUpdateTracker(tracker, to: categoryTitle)
-        updateTrackers(for: selectedDate, text: searchedText)
+        updateTrackers(for: selectedDate, filter: selectedFilter, text: searchedText)
     }
     
     func deleteTracker(at indexPath: IndexPath) {
@@ -80,7 +83,25 @@ final class TrackersViewModel: TrackersViewModelProtocol {
            let tracker = trackersDataProvider.tracker(from: trackerCoreData) {
             deleteTrackerMetrica()
             trackersDataProvider.deleteTracker(tracker)
+            updateTrackers(for: selectedDate, filter: selectedFilter, text: searchedText)
         }
+    }
+    
+    func updateFiltersSearch(filter: FilterMode) {
+        selectedFilter = filter
+        switch filter {
+        case .todayTrackers:
+            let currentDate = Date()
+            delegate?.updateDatePicker(to: currentDate)
+            selectedDate = currentDate
+        default:
+            updateTrackers(for: selectedDate, filter: selectedFilter, text: searchedText)
+        }
+    }
+    
+    func filtersButtonTapped() {
+        openFiltersMetrica()
+        coordinator.goToFilters(with: selectedFilter)
     }
 }
 
@@ -158,12 +179,15 @@ private extension TrackersViewModel {
         trackerCollectionViewManager?.updateDate(newDate: newDate)
     }
     
-    func updateTrackers(for date: Date, text: String) {
-        trackersDataProvider.trackers(for: date, searchText: text)
-        let fetchedSectionsIsEmpty = trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true
-        if fetchedSectionsIsEmpty && text.isEmpty {
+    func updateTrackers(for date: Date, filter: FilterMode, text: String) {
+        trackersDataProvider.trackers(for: date,
+                                      filterType: filter,
+                                      searchText: text)
+        let isEmpty = trackersDataProvider.trackerStore.fetchedResultsController?.sections?.isEmpty ?? true
+        
+        if isEmpty && text.isEmpty && (filter == .allTrackers || filter == .todayTrackers) {
             delegate?.updateEmptyState(to: .empty)
-        } else if fetchedSectionsIsEmpty && !text.isEmpty {
+        } else if isEmpty && (!text.isEmpty || (filter != .allTrackers && filter != .todayTrackers)) {
             delegate?.updateEmptyState(to: .notFound)
         } else {
             delegate?.updateEmptyState(to: .none)
