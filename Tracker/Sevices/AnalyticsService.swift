@@ -13,7 +13,7 @@ struct AnalyticsService {
         YMMYandexMetrica.activate(with: configuration)
     }
     
-    func report(model: MetricaModel) {
+    static func report(model: MetricaModel) {
         var params: [AnyHashable : Any] = [
             "screen": model.screen
         ]

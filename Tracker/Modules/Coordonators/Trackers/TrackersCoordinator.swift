@@ -11,7 +11,6 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
     private var trackerViewModel: TrackersViewModel?
     private let trackersDataProvider: TrackersDataProvider
     private let categoriesDataProvider = CategoriesDataProvider()
-    private let analyticsService = AnalyticsService()
     
     var tabBarItem: UITabBarItem = {
         var icon = UIImage(resource: .icTrackerSelected)
@@ -56,8 +55,7 @@ final class TrackersCoordinator: TabBarPresentableCoordinator {
 private extension TrackersCoordinator {
     func createTrackersController() -> UIViewController {
         let viewModel = TrackersViewModel(coordinator: self,
-                                          trackersDataProvider: trackersDataProvider,
-                                          analyticsService: analyticsService)
+                                          trackersDataProvider: trackersDataProvider)
         trackerViewModel = viewModel
         let viewController = TrackersViewController(viewModel: viewModel)
         return viewController

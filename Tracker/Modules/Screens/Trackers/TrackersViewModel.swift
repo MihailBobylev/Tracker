@@ -33,7 +33,6 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     
     private let coordinator: TrackersCoordinator
     private let trackersDataProvider: TrackersDataProvider
-    private let analyticsService: AnalyticsService
     private let calendar = Calendar.current
     private let feedbackGenerator = UINotificationFeedbackGenerator()
     private var trackerCollectionViewManager: TrackerCollectionViewManagerProtocol?
@@ -53,9 +52,8 @@ final class TrackersViewModel: TrackersViewModelProtocol {
     }
     weak var delegate: TrackersViewModelDelegate?
     
-    init(coordinator: TrackersCoordinator, trackersDataProvider: TrackersDataProvider, analyticsService: AnalyticsService) {
+    init(coordinator: TrackersCoordinator, trackersDataProvider: TrackersDataProvider) {
         self.coordinator = coordinator
-        self.analyticsService = analyticsService
         self.trackersDataProvider = trackersDataProvider
         self.trackersDataProvider.delegate = self
     }
@@ -143,7 +141,7 @@ extension TrackersViewModel {
     }
     
     func reportMetrica(model: MetricaModel) {
-        analyticsService.report(model: model)
+        AnalyticsService.report(model: model)
     }
 }
 
