@@ -10,9 +10,14 @@ import SnapKit
 
 final class TrackersViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Трекеры"
-        static var textFieldPlaceholderText = "Поиск"
-        static var emptyStateLabelText = "Что будем отслеживать?"
+        static var titleText = NSLocalizedString("trackers", comment: "Text displayed on title")
+        static var textFieldPlaceholderText = NSLocalizedString("search", comment: "Text displayed on search field")
+        static var emptyStateLabelText = NSLocalizedString("what_are_we_going_to_track", comment: "Text displayed on empty state label")
+        static var locale = NSLocalizedString("locale", comment: "locale")
+        static var alertTitle = NSLocalizedString("are_you_sure_you_want_to_delete_the_tracker", comment: "title for alert")
+        static var alertCancelTitle = NSLocalizedString("cancel_title", comment: "title for cancel action")
+        static var alertDeleteTitle = NSLocalizedString("delete", comment: "title for delete action")
+        static var filtersTitle = NSLocalizedString("filters", comment: "title for filters button")
     }
     
     private let titleLabel: UILabel = {
@@ -27,22 +32,14 @@ final class TrackersViewController: UIViewController {
         let datePicker = UIDatePicker()
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
-        datePicker.locale = Locale(identifier: "ru_RU")
+        datePicker.locale = Locale(identifier: Constants.locale)
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
     }()
     
-    private lazy var searchTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = Constants.textFieldPlaceholderText
-        tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
-        tf.backgroundColor = UIColor(resource: .grayPaleSky)
-        tf.layer.cornerRadius = 10
-        tf.clearButtonMode = .whileEditing
-        tf.autocorrectionType = .no
-        tf.leftView = setupTextFieldLeftView()
-        tf.leftViewMode = .always
-        return tf
+    private let searchHeaderView: SearchHeaderView = {
+        let view = SearchHeaderView()
+        return view
     }()
     
     private let mainCollectionView: UICollectionView = {
@@ -53,11 +50,20 @@ final class TrackersViewController: UIViewController {
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.reuseID)
         collectionView.backgroundColor = .clear
         collectionView.contentInset.top = 24.dvs
-        collectionView.contentInset.bottom = 24.dvs
+        collectionView.contentInset.bottom = 72.dvs
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.showsVerticalScrollIndicator = false
         collectionView.keyboardDismissMode = .onDrag
         return collectionView
+    }()
+    
+    private lazy var filtersButton: TrackerCustomButton = {
+        let button = TrackerCustomButton(style: .secondary)
+        button.setTitle(Constants.filtersTitle, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 20.dhs, bottom: 0, right: 20.dhs)
+        button.addTarget(self, action: #selector(filtersButtonTapped), for: .touchUpInside)
+        button.isHidden = true
+        return button
     }()
     
     private let emptyStateVStack: UIStackView = {
@@ -97,23 +103,55 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavBar()
+        setupActions()
         setupUI()
         viewModel.configureTrackerCollectionViewManager(with: mainCollectionView)
         viewModel.selectedDate = datePicker.date
         view.addKeyboardDismissTap()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        viewModel.screenWasOpenedMetrica()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        viewModel.screenWasClosedMetrica()
+    }
 }
 
 extension TrackersViewController: TrackersViewModelDelegate {
-    func updateEmptyState(to isShow: Bool) {
-        emptyStateVStack.isHidden = !isShow
-        mainCollectionView.isHidden = isShow
+    func updateDatePicker(to date: Date) {
+        datePicker.date = date
+    }
+    
+    func updateEmptyState(to type: EmptyStateType) {
+        switch type {
+        case .empty:
+            showEmptyState(type: type)
+            filtersButton.isHidden = true
+        case .notFound:
+            showEmptyState(type: type)
+            filtersButton.isHidden = false
+        case .none:
+            emptyStateVStack.isHidden = true
+            mainCollectionView.isHidden = false
+            filtersButton.isHidden = false
+        }
+    }
+    
+    func showAlertForDeleteTrackerAction(for indexPath: IndexPath) {
+        presentDeleteAlert { [weak self] in
+            self?.viewModel.deleteTracker(at: indexPath)
+        }
     }
 }
 
 private extension TrackersViewController {
     func configureNavBar() {
-        let leftButton = UIBarButtonItem(image: UIImage(resource: .icAddTracker).withRenderingMode(.alwaysOriginal),
+        let plusButton = UIImage(resource: .icAddTracker).withTintColor(.veryDark, renderingMode: .alwaysOriginal)
+        let leftButton = UIBarButtonItem(image: plusButton,
                                          style: .plain,
                                          target: self,
                                          action: #selector(leftButtonTapped))
@@ -122,12 +160,19 @@ private extension TrackersViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
     }
     
+    func setupActions() {
+        searchHeaderView.onTextChanged = { [weak self] text in
+            self?.viewModel.searchedText = text
+        }
+    }
+    
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         view.addSubview(titleLabel)
+        view.addSubview(searchHeaderView)
         view.addSubview(mainCollectionView)
-        view.addSubview(searchTextField)
         view.addSubview(emptyStateVStack)
+        view.addSubview(filtersButton)
         emptyStateVStack.addArrangedSubview(emptyStateImageView)
         emptyStateVStack.addArrangedSubview(emptyStateLabel)
         
@@ -136,16 +181,22 @@ private extension TrackersViewController {
             make.leading.trailing.equalToSuperview().inset(16.dhs)
         }
         
-        searchTextField.snp.makeConstraints { make in
+        searchHeaderView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(7.dvs)
             make.leading.trailing.equalToSuperview().inset(16.dhs)
             make.height.equalTo(36.dhs)
         }
         
         mainCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(searchTextField.snp.bottom).offset(10.dhs)
+            make.top.equalTo(searchHeaderView.snp.bottom).offset(10.dhs)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(-10.dvs)
+        }
+        
+        filtersButton.snp.makeConstraints { make in
+            make.height.equalTo(50.dvs)
+            make.centerX.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide).inset(16.dvs)
         }
         
         emptyStateImageView.snp.makeConstraints { make in
@@ -177,6 +228,38 @@ private extension TrackersViewController {
         
         return container
     }
+    
+    func presentDeleteAlert(onDelete: @escaping () -> Void) {
+        let alert = UIAlertController(
+            title: Constants.alertTitle,
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        let deleteAction = UIAlertAction(
+            title: Constants.alertDeleteTitle,
+            style: .destructive
+        ) { _ in
+            onDelete()
+        }
+        
+        let cancelAction = UIAlertAction(
+            title: Constants.alertCancelTitle,
+            style: .cancel
+        )
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
+    }
+    
+    func showEmptyState(type: EmptyStateType) {
+        emptyStateImageView.image = type.image
+        emptyStateLabel.text = type.text
+        emptyStateVStack.isHidden = false
+        mainCollectionView.isHidden = true
+    }
 }
 
 // MARK: Actions
@@ -187,5 +270,9 @@ private extension TrackersViewController {
     
     @objc func leftButtonTapped() {
         viewModel.goToAddNewTrackerScreen()
+    }
+    
+    @objc private func filtersButtonTapped() {
+        viewModel.filtersButtonTapped()
     }
 }

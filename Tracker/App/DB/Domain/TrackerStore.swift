@@ -15,6 +15,7 @@ protocol TrackerStoreDelegate: AnyObject {
 }
 
 final class TrackerStore: NSObject {
+    private let calendar = Calendar.current
     private let context: NSManagedObjectContext
     var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
     
@@ -38,10 +39,38 @@ final class TrackerStore: NSObject {
         super.init()
     }
     
-    func reconfigureFetchedResultsController(for weekday: WeekdayType) {
-        let predicate = NSPredicate(format: "%K CONTAINS %@", #keyPath(TrackerCoreData.schedule), weekday.mask)
+    func reconfigureFetchedResultsController(for date: Date,
+                                             searchText: String?,
+                                             filterType: FilterMode) {
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let weekday = calendar.weekdayType(from: date),
+              let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
+        
+        var predicates: [NSPredicate] = [
+            NSPredicate(format: "%K CONTAINS %@", #keyPath(TrackerCoreData.schedule), weekday.mask)
+        ]
+
+        switch filterType {
+        case .completedTrackers:
+            predicates.append(
+                NSPredicate(format: "SUBQUERY(records, $r, $r.completionDate >= %@ AND $r.completionDate < %@).@count > 0", startOfDay as NSDate, endOfDay as NSDate)
+            )
+        case .uncompletedTrackers:
+            predicates.append(
+                NSPredicate(format: "SUBQUERY(records, $r, $r.completionDate >= %@ AND $r.completionDate < %@).@count == 0", startOfDay as NSDate, endOfDay as NSDate)
+            )
+        case .allTrackers, .todayTrackers:
+            break
+        }
+
+        if let text = searchText, !text.isEmpty {
+            predicates.append(NSPredicate(format: "%K CONTAINS[cd] %@", #keyPath(TrackerCoreData.title), text))
+        }
+        
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+        
         if let frc = fetchedResultsController {
-            frc.fetchRequest.predicate = predicate
+            frc.fetchRequest.predicate = compoundPredicate
             
             do {
                 try frc.performFetch()
@@ -51,7 +80,7 @@ final class TrackerStore: NSObject {
             }
         } else {
             let request = TrackerCoreData.fetchRequest()
-            request.predicate = predicate
+            request.predicate = compoundPredicate
             request.sortDescriptors = [
                 NSSortDescriptor(keyPath: \TrackerCoreData.category?.title, ascending: true),
                 NSSortDescriptor(keyPath: \TrackerCoreData.title, ascending: true)
@@ -63,7 +92,7 @@ final class TrackerStore: NSObject {
                 sectionNameKeyPath: #keyPath(TrackerCoreData.category.title),
                 cacheName: nil
             )
-                
+            
             controller.delegate = self
             self.fetchedResultsController = controller
             
@@ -74,21 +103,32 @@ final class TrackerStore: NSObject {
             }
         }
     }
-    
-    func addTracker(_ tracker: Tracker, to categoryTitle: String) throws {
-        let trackerCoreData = TrackerCoreData(context: context)
-        trackerCoreData.id = tracker.id
+
+    func addOrUpdateTracker(_ tracker: Tracker, to categoryTitle: String) throws {
+        let fetchTrackerRequest = TrackerCoreData.fetchRequest()
+        fetchTrackerRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        fetchTrackerRequest.fetchLimit = 1
+        
+        let trackerCoreData: TrackerCoreData
+        if let existingTracker = try context.fetch(fetchTrackerRequest).first {
+            trackerCoreData = existingTracker
+        } else {
+            trackerCoreData = TrackerCoreData(context: context)
+            trackerCoreData.id = tracker.id
+        }
+        
         trackerCoreData.title = tracker.title
         trackerCoreData.emoji = tracker.emoji
         trackerCoreData.color = tracker.color.hexString
         trackerCoreData.schedule = tracker.schedule.map { $0.mask }.joined()
 
-        let fetchRequest = TrackerCategoryCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
-        fetchRequest.fetchLimit = 1
+        let fetchCategoryRequest = TrackerCategoryCoreData.fetchRequest()
+        fetchCategoryRequest.predicate = NSPredicate(format: "%K == %@", #keyPath(TrackerCategoryCoreData.title), categoryTitle)
+        fetchCategoryRequest.fetchLimit = 1
 
-        guard let category = try context.fetch(fetchRequest).first else {
-            throw NSError(domain: "AddTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Category \(categoryTitle) not found"])
+        guard let category = try context.fetch(fetchCategoryRequest).first else {
+            throw NSError(domain: "AddOrUpdateTracker", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Category \(categoryTitle) not found"])
         }
 
         trackerCoreData.category = category
@@ -96,7 +136,8 @@ final class TrackerStore: NSObject {
         do {
             try context.save()
         } catch {
-            print("Ошибка при сохранении: \(error)")
+            print("❌ Ошибка при сохранении: \(error)")
+            throw error
         }
     }
     
@@ -119,6 +160,39 @@ final class TrackerStore: NSObject {
         }
 
         return Tracker(id: id, title: title, color: color, emoji: emoji, schedule: schedule)
+    }
+    
+    func deleteTracker(by id: UUID) throws {
+        let fetchRequest = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(
+            format: "id == %@",
+            id as CVarArg
+        )
+        fetchRequest.fetchLimit = 1
+        
+        if let trackerToDelete = try context.fetch(fetchRequest).first {
+            context.delete(trackerToDelete)
+            do {
+                try context.save()
+            } catch {
+                print("❌ Ошибка при сохранении после удаления: \(error)")
+                throw error
+            }
+        } else {
+            throw NSError(domain: "DeleteTracker", code: 1, userInfo: [NSLocalizedDescriptionKey: "Tracker with id \(id) not found"])
+        }
+    }
+    
+    func getTrackerCategory(by id: UUID) throws -> TrackerCategory? {
+        let fetchRequest = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        fetchRequest.fetchLimit = 1
+        
+        if let trackerCoreData = try context.fetch(fetchRequest).first, let categoryTitle = trackerCoreData.category?.title {
+            return TrackerCategory(title: categoryTitle, trackers: [])
+        } else {
+            throw NSError(domain: "GetTrackerCategory", code: 1, userInfo: [NSLocalizedDescriptionKey: "Tracker with id \(id) not found"])
+        }
     }
 }
 

@@ -10,9 +10,9 @@ import SnapKit
 
 final class CategoriesViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Категория"
-        static var mainButtonText = "Добавить категорию"
-        static var emptyStateLabelText = "Привычки и события можно \nобъединить по смыслу"
+        static var titleText = NSLocalizedString("category", comment: "category section title text")
+        static var mainButtonText = NSLocalizedString("add_a_category", comment: "button title text")
+        static var emptyStateLabelText = NSLocalizedString("habits_and_events_can_be_combined", comment: "empty state label text")
     }
     
     private let titleLabel: UILabel = {
@@ -98,7 +98,7 @@ extension CategoriesViewController: CategoriesViewModelDelegate {
 
 private extension CategoriesViewController {
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         
         view.addSubview(titleLabel)
         view.addSubview(emptyStateVStack)

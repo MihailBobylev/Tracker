@@ -26,11 +26,6 @@ final class TrackerCustomButton: UIButton {
         super.init(coder: coder)
         setup()
     }
-    
-    func setStyle(_ style: CustomButtonStyle) {
-        currentStyle = style
-        applyStyle()
-    }
 }
 
 private extension TrackerCustomButton {

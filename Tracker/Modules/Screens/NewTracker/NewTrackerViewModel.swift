@@ -12,62 +12,51 @@ protocol NewTrackerViewModelDelegate: AnyObject {
 }
 
 protocol NewTrackerViewModelProtocol {
+    var trackerEditMode: TrackerEditMode { get }
     var delegate: NewTrackerViewModelDelegate? { get set }
     func getSections() -> [NewTrackerSection]
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView)
     func updateSelectedCategory(category: TrackerCategory?)
     func updateSelectedWeekdays(_ days: Set<WeekdayType>)
+    func completedDaysCountForTracker(_ tracker: Tracker) -> Int 
     func doneButtonTapped()
 }
 
 final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     private let coordinator: NewTrackerCoordinator
-    private var newTrackerService: NewTrackerService
+    private let newTrackerService: NewTrackerService
     private let trackersDataProvider: TrackersDataProvider
+    
     private var mainCollectionViewManager: MainCollectionViewManagerProtocol?
-    private var trackerTitle: String = "" {
-        didSet {
-            updateButtonState()
-        }
-    }
     
-    private var selectedCategory: TrackerCategory? {
-        didSet {
-            updateSelectedCategoryInfo(with: selectedCategory?.title)
-            updateButtonState()
-        }
-    }
+    let trackerEditMode: TrackerEditMode
     
-    private var selectedWeekdays: Set<WeekdayType> = [] {
-        didSet {
-            updateScheduleInfo(with: selectedWeekdays.labelText)
-            updateButtonState()
-        }
-    }
-    private var trackerEmoji: String = "" {
-        didSet {
-            updateButtonState()
-        }
-    }
-    
-    private var trackerColor: UIColor? {
-        didSet {
-            updateButtonState()
-        }
-    }
-    
+    private var editableTrackerState: TrackerEditableState
     weak var delegate: NewTrackerViewModelDelegate?
     
-    init(newTrackerService: NewTrackerService, coordinator: NewTrackerCoordinator, trackersDataProvider: TrackersDataProvider) {
+    init(newTrackerService: NewTrackerService,
+         coordinator: NewTrackerCoordinator,
+         trackersDataProvider: TrackersDataProvider,
+         trackerEditMode: TrackerEditMode) {
         self.newTrackerService = newTrackerService
         self.coordinator = coordinator
         self.trackersDataProvider = trackersDataProvider
+        self.trackerEditMode = trackerEditMode
+        
+        if let tracker = trackerEditMode.editableTracker {
+            let category = trackersDataProvider.getCategory(for: tracker)
+            self.editableTrackerState = TrackerEditableState(tracker: tracker,
+                                                             category: category)
+        } else {
+            self.editableTrackerState = TrackerEditableState(tracker: nil, category: nil)
+        }
     }
     
     func configureTrackerCollectionViewManager(with collectionView: UICollectionView) {
         mainCollectionViewManager = MainCollectionViewManager(trackersDataProvider: trackersDataProvider,
                                                               collectionView: collectionView,
-                                                              sections: newTrackerService.fetchNewTrackerSections())
+                                                              sections: newTrackerService.fetchNewTrackerSections(),
+                                                              editableTracker: editableTrackerState)
         mainCollectionViewManager?.setupCollectionView()
         mainCollectionViewManager?.delegate = self
     }
@@ -77,16 +66,30 @@ final class NewTrackerViewModel: NewTrackerViewModelProtocol {
     }
     
     func updateSelectedWeekdays(_ days: Set<WeekdayType>) {
-        selectedWeekdays = days
+        editableTrackerState.weekdays = days
+        mainCollectionViewManager?.updateEditableTracker(with: editableTrackerState)
+        updateScheduleInfo()
+        updateButtonState()
     }
-
+    
     func doneButtonTapped() {
-        guard let selectedCategory, let color = trackerColor else { return }
-        let createdTracker = Tracker(title: trackerTitle,
-                                     color: color,
-                                     emoji: trackerEmoji,
-                                     schedule: selectedWeekdays)
-        coordinator.didFinishCreatingNewTracker(createdTracker, categoryTitle: selectedCategory.title)
+        guard !editableTrackerState.title.isEmpty,
+              let color = editableTrackerState.color,
+              !editableTrackerState.emoji.isEmpty,
+              !editableTrackerState.weekdays.isEmpty,
+              let category = editableTrackerState.category else { return }
+        
+        let createdTracker = Tracker(
+            id: editableTrackerState.id,
+            title: editableTrackerState.title,
+            color: color,
+            emoji: editableTrackerState.emoji,
+            schedule: editableTrackerState.weekdays)
+        coordinator.didFinishCreatingNewTracker(createdTracker, categoryTitle: category.title)
+    }
+    
+    func completedDaysCountForTracker(_ tracker: Tracker) -> Int {
+        trackersDataProvider.completedDays(for: tracker)
     }
 }
 
@@ -97,9 +100,9 @@ extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
             let subItem = type.models[indexPath.item]
             switch subItem {
             case .category:
-                coordinator.goToCategory(selectedCategory: selectedCategory)
+                coordinator.goToCategory(selectedCategory: editableTrackerState.category)
             case .schedule:
-                coordinator.goToSchedule(selectedWeekdays: selectedWeekdays)
+                coordinator.goToSchedule(selectedWeekdays: editableTrackerState.weekdays)
             }
         default:
             break
@@ -107,37 +110,50 @@ extension NewTrackerViewModel: MainCollectionViewManagerDelegate {
     }
     
     func updateEnteredText(newText: String) {
-        trackerTitle = newText
+        editableTrackerState.title = newText
+        mainCollectionViewManager?.updateEditableTracker(with: editableTrackerState)
+        updateButtonState()
     }
     
     func updateSelectedCategory(category: TrackerCategory?) {
-        selectedCategory = category
+        editableTrackerState.category = category
+        mainCollectionViewManager?.updateEditableTracker(with: editableTrackerState)
+        updateSelectedCategoryInfo()
+        updateButtonState()
     }
     
     func updateSelectedEmoji(emoji: String) {
-        trackerEmoji = emoji
+        editableTrackerState.emoji = emoji
+        mainCollectionViewManager?.updateEditableTracker(with: editableTrackerState)
+        updateButtonState()
     }
     
     func updateSelectedColor(color: UIColor) {
-        trackerColor = color
+        editableTrackerState.color = color
+        mainCollectionViewManager?.updateEditableTracker(with: editableTrackerState)
+        updateButtonState()
     }
 }
 
 private extension NewTrackerViewModel {
-    func updateSelectedCategoryInfo(with text: String?) {
-        mainCollectionViewManager?.updateSelectedCategory(with: text)
+    func updateSelectedCategoryInfo() {
+        mainCollectionViewManager?.updateSelectedCategory()
     }
     
-    func updateScheduleInfo(with text: String?) {
-        mainCollectionViewManager?.updateSelectedWeekday(with: text)
+    func updateScheduleInfo() {
+        mainCollectionViewManager?.updateSelectedWeekday()
     }
     
     func updateButtonState() {
-        let isEnabled = !trackerTitle.isEmpty
-        && selectedCategory != nil
-        && !selectedWeekdays.isEmpty
-        && !trackerEmoji.isEmpty
-        && trackerColor != nil
-        delegate?.changeButtonState(to: isEnabled)
+        guard !editableTrackerState.title.isEmpty,
+              let _ = editableTrackerState.color,
+              !editableTrackerState.emoji.isEmpty,
+              !editableTrackerState.weekdays.isEmpty,
+              let _ = editableTrackerState.category else {
+            delegate?.changeButtonState(to: false)
+            return
+        }
+        
+        delegate?.changeButtonState(to: true)
     }
 }

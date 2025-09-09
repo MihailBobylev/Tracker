@@ -10,16 +10,31 @@ import SnapKit
 
 final class NewTrackerViewController: UIViewController {
     private struct Constants {
-        static var titleText = "Новая привычка"
-        static var cancelButtonText = "Отменить"
-        static var doneButtonText = "Создать"
+        static var cancelButtonText = NSLocalizedString("cancel", comment: "cancel button text")
+        static var doneButtonText = NSLocalizedString("create", comment: "create button text")
     }
+    
+    private let mainVStack: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 38.dvs
+        return stackView
+    }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = Constants.titleText
         label.font = UIFont.systemFont(ofSize: 16.dfs, weight: .medium)
         label.textAlignment = .center
+        label.textColor = .veryDark
+        return label
+    }()
+    
+    private lazy var countOfCompletedDaysLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 32.dfs, weight: .bold)
+        label.textAlignment = .center
+        label.textColor = .veryDark
+        label.isHidden = true
         return label
     }()
     
@@ -79,6 +94,7 @@ final class NewTrackerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupAppearance()
         viewModel.configureTrackerCollectionViewManager(with: mainCollectionView)
         view.addKeyboardDismissTap()
     }
@@ -92,21 +108,23 @@ extension NewTrackerViewController: NewTrackerViewModelDelegate {
 
 private extension NewTrackerViewController {
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .backgroundWhite
         
-        view.addSubview(titleLabel)
+        view.addSubview(mainVStack)
+        mainVStack.addArrangedSubview(titleLabel)
+        mainVStack.addArrangedSubview(countOfCompletedDaysLabel)
         view.addSubview(mainCollectionView)
         view.addSubview(buttonsHStack)
         buttonsHStack.addArrangedSubview(cancelButton)
         buttonsHStack.addArrangedSubview(doneButton)
         
-        titleLabel.snp.makeConstraints { make in
+        mainVStack.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(27.dvs)
             make.leading.trailing.equalToSuperview()
         }
         
         mainCollectionView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(14.dvs)
+            make.top.equalTo(mainVStack.snp.bottom).offset(14.dvs)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(buttonsHStack.snp.top).inset(-16.dvs)
         }
@@ -122,6 +140,21 @@ private extension NewTrackerViewController {
         
         doneButton.snp.makeConstraints { make in
             make.height.equalTo(60.dvs)
+        }
+    }
+    
+    func setupAppearance() {
+        let trackerEditMode = viewModel.trackerEditMode
+        titleLabel.text = trackerEditMode.title
+        
+        if case .edit(let tracker) = trackerEditMode {
+            let tasksString = String.localizedStringWithFormat(
+                NSLocalizedString("numberOfDays", comment: "Number of completed tasks"),
+                viewModel.completedDaysCountForTracker(tracker)
+            )
+            countOfCompletedDaysLabel.text = tasksString
+            countOfCompletedDaysLabel.isHidden = false
+            changeButtonState(to: true)
         }
     }
     

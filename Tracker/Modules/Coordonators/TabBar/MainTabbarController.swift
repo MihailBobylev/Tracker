@@ -15,11 +15,12 @@ protocol TabBarPresentableCoordinator: Coordinator {
 final class MainTabbarController: UITabBarController {
     
     private var coordinators: [TabBarPresentableCoordinator] = []
+    private let trackersDataProvider = TrackersDataProvider()
     
     init() {
         super.init(nibName: nil, bundle: nil)
-        UITabBar.appearance().backgroundColor = #colorLiteral(red: 0.9843137255, green: 0.9882352941, blue: 0.9960784314, alpha: 1)
-        tabBar.addTopBorder(color: .lightGray)
+        UITabBar.appearance().backgroundColor = .backgroundWhite
+        tabBar.addTopBorder(color: .sepLightGray)
         fillCoordinators()
     }
     
@@ -28,8 +29,8 @@ final class MainTabbarController: UITabBarController {
     }
     
     private func fillCoordinators() {
-        let trackersCoordinator = TrackersCoordinator(navigation: UINavigationController())
-        let statisticsCoordinator = StatisticsCoordinator(navigation: UINavigationController())
+        let trackersCoordinator = TrackersCoordinator(navigation: UINavigationController(), trackersDataProvider: trackersDataProvider)
+        let statisticsCoordinator = StatisticsCoordinator(navigation: UINavigationController(), trackersDataProvider: trackersDataProvider)
 
         coordinators = [
             trackersCoordinator,

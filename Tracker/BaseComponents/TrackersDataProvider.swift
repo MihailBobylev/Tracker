@@ -12,7 +12,6 @@ protocol TrackersDataProviderDelegate: AnyObject {
 }
 
 final class TrackersDataProvider {
-    private let calendar = Calendar.current
     private let trackerRecordStore = TrackerRecordStore()
     
     lazy var trackerStore: TrackerStore = {
@@ -23,11 +22,10 @@ final class TrackersDataProvider {
     
     weak var delegate: TrackersDataProviderDelegate?
     
-    func trackers(for date: Date) {
-        guard let weekday = calendar.weekdayType(from: date) else {
-            return
-        }
-        trackerStore.reconfigureFetchedResultsController(for: weekday)
+    func trackers(for date: Date, filterType: FilterMode, searchText: String?) {
+        trackerStore.reconfigureFetchedResultsController(for: date,
+                                                         searchText: searchText,
+                                                         filterType: filterType)
     }
 
     func tracker(from coreData: TrackerCoreData) -> Tracker? {
@@ -42,12 +40,24 @@ final class TrackersDataProvider {
         trackerRecordStore.completionCount(for: tracker)
     }
     
-    func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
-        try? trackerStore.addTracker(tracker, to: categoryTitle)
+    func completedTrackersCount() -> Int {
+        trackerRecordStore.completedTrackersCount()
+    }
+    
+    func addOrUpdateTracker(_ tracker: Tracker, to categoryTitle: String) {
+        try? trackerStore.addOrUpdateTracker(tracker, to: categoryTitle)
     }
     
     func completeTracker(tracker: Tracker, for date: Date) {
         try? trackerRecordStore.toggleRecord(for: tracker, on: date)
+    }
+    
+    func deleteTracker(_ tracker: Tracker) {
+        try? trackerStore.deleteTracker(by: tracker.id)
+    }
+    
+    func getCategory(for tracker: Tracker) -> TrackerCategory? {
+        try? trackerStore.getTrackerCategory(by: tracker.id)
     }
 }
 

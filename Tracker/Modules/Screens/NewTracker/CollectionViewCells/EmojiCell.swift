@@ -31,18 +31,19 @@ final class EmojiCell: UICollectionViewCell, SelectableCellProtocol {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        backgroundColor = .white
+        changeSelectedState(isSelected: false)
         emojiLabel.text = nil
     }
 }
 
 extension EmojiCell {
-    func configure(emoji: String) {
+    func configure(emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji
+        changeSelectedState(isSelected: isSelected)
     }
     
     func changeSelectedState(isSelected: Bool) {
-        backgroundColor = isSelected ? .backLightGray : .white
+        backgroundColor = isSelected ? .backLightGray : .backgroundWhite
     }
 }
 
@@ -56,7 +57,7 @@ private extension EmojiCell {
     }
     
     func setupAppearance() {
-        backgroundColor = .white
+        backgroundColor = .backgroundWhite
         layer.cornerRadius = 18
         layer.masksToBounds = true
     }

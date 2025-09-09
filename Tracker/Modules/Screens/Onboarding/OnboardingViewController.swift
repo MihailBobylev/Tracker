@@ -10,9 +10,9 @@ import SnapKit
 
 final class OnboardingViewController: UIPageViewController {
     private struct Constants {
-        static var firstPageText = "Отслеживайте только то, что хотите"
-        static var secondPageText = "Даже если это не литры воды и йога"
-        static var doneButtonText = "Вот это технологии!"
+        static var firstPageText = NSLocalizedString("track_only_what_you_want", comment: "first page text")
+        static var secondPageText = NSLocalizedString("liters_of_water_and_yoga", comment: "second page text")
+        static var doneButtonText = NSLocalizedString("these_are_the_technologies", comment: "done button text")
     }
     
     private lazy var pages: [UIViewController] = {

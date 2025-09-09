@@ -12,6 +12,8 @@ final class NewTrackerCoordinator: Coordinator {
     private let scheduleService = ScheduleService()
     private let trackersDataProvider: TrackersDataProvider
     private let categoriesDataProvider: CategoriesDataProvider
+    private let trackerEditMode: TrackerEditMode
+    
     private var newTrackerViewModel: NewTrackerViewModel?
     private var categoriesViewModel: CategoriesViewModel?
     
@@ -20,10 +22,12 @@ final class NewTrackerCoordinator: Coordinator {
     
     init(navigationController: UINavigationController,
          trackersDataProvider: TrackersDataProvider,
-         categoriesDataProvider: CategoriesDataProvider) {
+         categoriesDataProvider: CategoriesDataProvider,
+         trackerEditMode: TrackerEditMode) {
         self.navigationController = navigationController
         self.trackersDataProvider = trackersDataProvider
         self.categoriesDataProvider = categoriesDataProvider
+        self.trackerEditMode = trackerEditMode
     }
     
     func start() {
@@ -54,7 +58,8 @@ private extension NewTrackerCoordinator {
     func createNewTrackersController() -> UIViewController {
         let viewModel = NewTrackerViewModel(newTrackerService: newTrackerService,
                                             coordinator: self,
-                                            trackersDataProvider: trackersDataProvider)
+                                            trackersDataProvider: trackersDataProvider,
+                                            trackerEditMode: trackerEditMode)
         newTrackerViewModel = viewModel
         let viewController = NewTrackerViewController(viewModel: viewModel)
         return viewController

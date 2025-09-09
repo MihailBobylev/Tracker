@@ -25,7 +25,7 @@ final class TitleTextFieldCell: UICollectionViewCell {
         let tf = UITextField()
         tf.delegate = self
         tf.borderStyle = .roundedRect
-        tf.placeholder = "Введите название трекера"
+        tf.placeholder = NSLocalizedString("enter_the_name_of_the_tracker", comment: "placeholder text")
         tf.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         tf.returnKeyType = .done
         tf.borderStyle = .none
@@ -40,7 +40,10 @@ final class TitleTextFieldCell: UICollectionViewCell {
     
     private let errorLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ограничение 38 символов"
+        label.text = String(
+            format: NSLocalizedString("the_limit_is_N_characters", comment: "error text"),
+            38
+        )
         label.textColor = UIColor(resource: .redSoft)
         label.font = UIFont.systemFont(ofSize: 17.dfs, weight: .regular)
         label.textAlignment = .center
@@ -67,6 +70,10 @@ final class TitleTextFieldCell: UICollectionViewCell {
     
     func changeErrorState(isError: Bool) {
         errorLabel.isHidden = !isError
+    }
+    
+    func configure(with text: String) {
+        textField.text = text
     }
 }
 

@@ -36,22 +36,15 @@ struct DetailsSection: NewTrackerSection {
     var models: [Details]
     
     enum Details {
-        case category(subtitle: String?)
-        case schedule(subtitle: String?)
+        case category
+        case schedule
         
         var title: String {
             switch self {
             case .category:
-                return "Категория"
+                return NSLocalizedString("category", comment: "category section title text")
             case .schedule:
-                return "Расписание"
-            }
-        }
-        
-        var subtitle: String? {
-            switch self {
-            case .category(let subtitle), .schedule(let subtitle):
-                return subtitle
+                return NSLocalizedString("schedule", comment: "schedule section title text")
             }
         }
     }

@@ -16,7 +16,7 @@ final class SimpleTitleHeaderView: UICollectionReusableView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 19.dfs, weight: .bold)
-        label.textColor = .black
+        label.textColor = .veryDark
         label.textAlignment = .left
         return label
     }()
